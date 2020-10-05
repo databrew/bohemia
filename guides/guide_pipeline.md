@@ -106,20 +106,27 @@ con <- dbConnect(drv, dbname='bohemia', host=psql_end_point,
 
 - Having retrieved the data, the code for updating it is in `scripts/update_database.R`.  
 
-# Data Update
+
+## Data Update
 
 As mentioned in the General Overview section, the `bohemia` R package (main wrapper function: `odk_get_data`) used for fetching data from ODK is run every N minutes automatically. This section details the steps to deploy and set it up on AWS EC2 instances.
 
-## CronTab Set Up
+### CronTab Set Up
 1. SSH into the server e.g:
-```ssh -i "/home/joebrew/.ssh/openhdskey.pem" ubuntu@ec2-18-218-151-100.us-east-2.compute.amazonaws.com```
+
+   ```ssh -i "/home/joebrew/.ssh/openhdskey.pem" ubuntu@ec2-18-218-151-100.us-east-2.compute.amazonaws.com```
+
 2. As `sudo` run (on the shell):
-   ```crontab -e
-   In the crontab editor opened, type in for an automatic run every 15 minutes: 
-       ```15 * * * * sh [PATH_TO_FOLDER_ROOT]/bohemia/scripts/run_odk_get_data_cron.sh```
-   Save and exit the editor.
-   _p.s The value in [] is dependent on the server file paths used. Replace this with the actual path on server._
+
+   `crontab -e`
+
+   a. In the crontab editor opened, type in for an automatic run every 15 minutes: 
+   
+      ```15 * * * * sh [PATH_TO_FOLDER_ROOT]/bohemia/scripts/run_odk_get_data_cron.sh```
+   
+   b. Save and exit the editor.
+   _p.s The value in [PATH_TO_FOLDER_ROOT] is dependent on the server file paths used. Replace this with the actual path on server._
 3. Wait for the time set to verify the job is run by checking the console output for the echo statements.
 
-## Deploy
+### Deploy
 The current deploy is part of the main project, no special steps required for this.
