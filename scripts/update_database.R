@@ -1,3 +1,4 @@
+#!/usr/bin/Rscript
 library(bohemia)
 library(yaml)
 creds <- yaml::yaml.load_file('../credentials/credentials.yaml')
