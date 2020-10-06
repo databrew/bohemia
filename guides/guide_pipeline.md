@@ -87,7 +87,8 @@ psql \
 ```
 library(bohemia)
 library(yaml)
-creds <- yaml::yaml.load_file('../credentials/credentials.yaml')
+creds_fpath <- '/home/ubuntu/Documents/bohemia/credentials/credentials.yaml'  # Change this to your local path
+creds <- yaml::yaml.load_file(creds_fpath)
 url <- 'https://bohemia.systems'
 id = 'minicensus'
 id2 = NULL
@@ -114,7 +115,7 @@ As mentioned in the General Overview section, the `bohemia` R package (main wrap
 ### CronTab Set Up
 1. SSH into the server e.g:
 
-   ```ssh -i "/home/joebrew/.ssh/openhdskey.pem" ubuntu@ec2-18-218-151-100.us-east-2.compute.amazonaws.com```
+   ```ssh ubuntu@ec2-18-218-151-100.us-east-2.compute.amazonaws.com```
 
 2. As `sudo` run (on the shell):
 
@@ -122,11 +123,15 @@ As mentioned in the General Overview section, the `bohemia` R package (main wrap
 
    a. In the crontab editor opened, type in for an automatic run every 15 minutes: 
    
-      ```15 * * * * sh [PATH_TO_FOLDER_ROOT]/bohemia/scripts/run_odk_get_data_cron.sh```
+      ```15 * * * * sh /home/ubuntu/Documents/bohemia/scripts/run_odk_get_data_cron.sh```
    
    b. Save and exit the editor.
-   _p.s The value in [PATH_TO_FOLDER_ROOT] is dependent on the server file paths used. Replace this with the actual path on server._
+
 3. Wait for the time set to verify the job is run by checking the console output for the echo statements.
 
 ### Deploy
-The current deploy is part of the main project, no special steps required for this.
+The script is part of the main project and should be deployed with it.
+
+The script depends upon `Rscript` and so this should be installed if it doesn't already exist on the server by running:
+   
+   `sudo apt update && apt install Rscript`
