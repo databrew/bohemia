@@ -117,21 +117,25 @@ As mentioned in the General Overview section, the `bohemia` R package (main wrap
 
    ```ssh ubuntu@ec2-18-218-151-100.us-east-2.compute.amazonaws.com```
 
-2. As `sudo` run (on the shell):
+2. Run (on the shell):
 
    `crontab -e`
 
-   a. In the crontab editor opened, type in for an automatic run every 15 minutes: 
+   a. In the crontab editor opened, type in for an automatic run every 15 minutes past the hour: 
    
-      ```15 * * * * sh /home/ubuntu/Documents/bohemia/scripts/run_odk_get_data_cron.sh```
+      `15 * * * * sh /home/ubuntu/Documents/bohemia/scripts/run_odk_get_data_cron.sh`
    
    b. Save and exit the editor.
 
-3. Wait for the time set to verify the job is run by checking the console output for the echo statements.
+3. Wait for the time set to verify the job is run by checking the syslog for the entry:
+
+   `tail -f /var/log/syslog | grep CRON`
 
 ### Deploy
 The script is part of the main project and should be deployed with it.
 
 The script depends upon `Rscript` and so this should be installed if it doesn't already exist on the server by running:
    
-   `sudo apt update && apt install Rscript`
+   `sudo bash`
+
+   `apt update && apt install r-base-core`
