@@ -1177,14 +1177,16 @@ clean tables), run: `clean_db()`
     sudo chmod 750 /etc/postfix/sasl
     sudo chmod 640 /etc/postfix/sasl/sasl_passwd
     ```
-10. Restart the postfix service by running `sudo service postfix restart`
-10. Test that the email setup works by running 
-    `echo "Confirm email works test" | mail -s "Cron email test" wanjiru@databrew.cc`
 
-11. If you don't get an email, check the mail log at
+10. Restart the postfix service by running `sudo service postfix restart`
+
+11. Test that the email setup works by running 
+    `echo "Confirm email works test" | mail -s "Cron email test" joe@databrew.cc`
+
+12. If you don't get an email, check the mail log at
     `tail -10 /var/log/mail.log` to review the issue.
 
-12. For Gmail, you should have an email or a security alert. 
+13. For Gmail, you should have an email or a security alert. 
     Follow the instructions in the security alert email to 
     guide you to the option to 
     `Allow less secure apps` set this to `ON`
