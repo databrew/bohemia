@@ -1156,7 +1156,7 @@ clean tables), run: `clean_db()`
 
 6.  Add/Update the entries to be:
     ```
-      myhostname = bohemia.systems
+      myhostname = bohemia.team
       relayhost = [smtp.gmail.com]:587
       smtp_sasl_auth_enable = yes
       smtp_sasl_password_maps = hash:/etc/postfix/sasl/sasl_passwd
@@ -1177,7 +1177,7 @@ clean tables), run: `clean_db()`
     sudo chmod 750 /etc/postfix/sasl
     sudo chmod 640 /etc/postfix/sasl/sasl_passwd
     ```
-
+10. Restart the postfix service by running `sudo service postfix restart`
 10. Test that the email setup works by running 
     `echo "Confirm email works test" | mail -s "Cron email test" wanjiru@databrew.cc`
 
