@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import psycopg2
 import yaml
 from sqlalchemy import create_engine
