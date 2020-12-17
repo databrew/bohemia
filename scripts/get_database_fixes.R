@@ -35,8 +35,9 @@ subs <- odk_data$minicensus_repeat_hh_sub
 enumerations <- odk_data$enumerations
 
 # check data associated with a certain instance_id
-#temp <- odk_data$minicensus_main[odk_data$minicensus_main$instance_id=='',]
-#temp1 <- odk_data$minicensus_people[odk_data$minicensus_people$instance_id=='',]
+#temp1 <- odk_data$minicensus_main[odk_data$minicensus_main$instance_id=='',]
+#temp2 <- odk_data$minicensus_people[odk_data$minicensus_people$instance_id=='',]
+#temp3 <- odk_data$minicensus_repeat_death_info[odk_data$minicensus_repeat_death_info$instance_id=='',]
 
 minicensus_main <- odk_data$minicensus_main
 people <- odk_data$minicensus_people
