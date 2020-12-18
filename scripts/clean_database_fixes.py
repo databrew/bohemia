@@ -2488,6 +2488,15 @@ implement(id = None, query = "UPDATE clean_minicensus_main SET any_deaths_past_y
 iid = "'a85741ad-37df-454a-9f7a-f809e1d34f26'"
 implement(id = None, query = "UPDATE clean_minicensus_main SET any_deaths_past_year='No', how_many_deaths='NA' WHERE instance_id=" + iid + "; DELETE FROM minicensus_repeat_death_info WHERE instance_id= " + iid + ";", who = 'Xing Brew')
 
+iid = "'2bd207df-0e3d-46bf-aeb1-7e1e88fa7d5d'"
+implement(id = None, query = "UPDATE clean_minicensus_main SET any_deaths_past_year='No', how_many_deaths='NA' WHERE instance_id=" + iid + "; DELETE FROM minicensus_repeat_death_info WHERE instance_id= " + iid + ";", who = 'Xing Brew')
+
+iid = "'70afb03d-0ec9-4504-a02d-c37d589a9548'"
+implement(id = None, query = "UPDATE clean_minicensus_main SET any_deaths_past_year='No', how_many_deaths='NA' WHERE instance_id=" + iid + "; DELETE FROM minicensus_repeat_death_info WHERE instance_id= " + iid + ";", who = 'Xing Brew')
+
+iid = "'87cfb23e-5e2d-4dec-91ac-cffeca0dd99f'"
+implement(id = None, query = "UPDATE clean_minicensus_main SET any_deaths_past_year='No', how_many_deaths='NA' WHERE instance_id=" + iid + "; DELETE FROM minicensus_repeat_death_info WHERE instance_id= " + iid + ";", who = 'Xing Brew')
+
 # households with multiple deaths, where at least one should be deleted
 iid = "'a562f9ad-5e3e-46b0-a5c0-62d347b30535'"
 implement(id = None, query = "UPDATE clean_minicensus_main SET how_many_deaths='1' WHERE instance_id=" + iid + "; DELETE FROM minicensus_repeat_death_info WHERE instance_id= " + iid + " and death_number='1'; DELETE FROM minicensus_repeat_death_info WHERE instance_id= " + iid + " and death_number='2';", who = 'Xing Brew')
@@ -2506,6 +2515,9 @@ implement(id = None, query = "UPDATE clean_minicensus_main SET how_many_deaths='
 
 iid = "'bc8f9381-35b6-44ad-bbfb-d4dee20b5f75'"
 implement(id = None, query = "UPDATE clean_minicensus_main SET how_many_deaths='1' WHERE instance_id=" + iid + "; DELETE FROM minicensus_repeat_death_info WHERE instance_id= " + iid + " and death_number='1';", who = 'Xing Brew')
+
+iid = "'be6ab64d-364a-47df-8f59-a1db152001bf'"
+implement(id = None, query = "UPDATE clean_minicensus_main SET how_many_deaths='2' WHERE instance_id=" + iid + "; DELETE FROM minicensus_repeat_death_info WHERE instance_id= " + iid + " and death_number='1';", who = 'Xing Brew')
 
 
 dbconn.commit()
