@@ -17,6 +17,7 @@
       },
       {
         "type": "note",
+        "name": "hh_id",
         "display": {
           "prompt": {
             "text": "Household ID: {{data.hh_id}}"
@@ -26,6 +27,7 @@
       },
       {
         "type": "note",
+        "name": "group_water_body_info",
         "display": {
           "prompt": {
             "text": "Water Body Details"
@@ -38,7 +40,7 @@
         "name": "water_bodies_geo",
         "display": {
           "prompt": {
-            "text": "53a(i). Record GPS coordinates for this body of water (mandatory)"
+            "text": "53a(i). Record GPS coordinates for this body of water (optional)"
           }
         },
         "_row_num": 5
@@ -61,6 +63,36 @@
     ],
     "choices": [
       {
+        "choice_list_name": "yndk",
+        "data_value": "yes",
+        "display": {
+          "title": {
+            "text": "Yes"
+          }
+        },
+        "_row_num": 2
+      },
+      {
+        "choice_list_name": "yndk",
+        "data_value": "no",
+        "display": {
+          "title": {
+            "text": "No"
+          }
+        },
+        "_row_num": 3
+      },
+      {
+        "choice_list_name": "yndk",
+        "data_value": "dk",
+        "display": {
+          "title": {
+            "text": "Don't Know"
+          }
+        },
+        "_row_num": 4
+      },
+      {
         "choice_list_name": "water_body_type",
         "data_value": "permanent",
         "display": {
@@ -68,7 +100,7 @@
             "text": "Permanent water (all year)"
           }
         },
-        "_row_num": 2
+        "_row_num": 5
       },
       {
         "choice_list_name": "water_body_type",
@@ -78,7 +110,7 @@
             "text": "Semi-permanent water (most of the year)"
           }
         },
-        "_row_num": 3
+        "_row_num": 6
       },
       {
         "choice_list_name": "water_body_type",
@@ -88,7 +120,7 @@
             "text": "Transient water (only present when it rains)"
           }
         },
-        "_row_num": 4
+        "_row_num": 7
       }
     ],
     "settings": [
@@ -127,16 +159,6 @@
         "name": "hh_id",
         "type": "string",
         "_row_num": 2
-      },
-      {
-        "name": "water_bodies_geo",
-        "type": "geopoint",
-        "_row_num": 3
-      },
-      {
-        "name": "water_bodies_type",
-        "type": "string",
-        "_row_num": 4
       }
     ]
   },
@@ -216,6 +238,38 @@
       }
     },
     "choices": {
+      "yndk": [
+        {
+          "choice_list_name": "yndk",
+          "data_value": "yes",
+          "display": {
+            "title": {
+              "text": "Yes"
+            }
+          },
+          "_row_num": 2
+        },
+        {
+          "choice_list_name": "yndk",
+          "data_value": "no",
+          "display": {
+            "title": {
+              "text": "No"
+            }
+          },
+          "_row_num": 3
+        },
+        {
+          "choice_list_name": "yndk",
+          "data_value": "dk",
+          "display": {
+            "title": {
+              "text": "Don't Know"
+            }
+          },
+          "_row_num": 4
+        }
+      ],
       "water_body_type": [
         {
           "choice_list_name": "water_body_type",
@@ -225,7 +279,7 @@
               "text": "Permanent water (all year)"
             }
           },
-          "_row_num": 2
+          "_row_num": 5
         },
         {
           "choice_list_name": "water_body_type",
@@ -235,7 +289,7 @@
               "text": "Semi-permanent water (most of the year)"
             }
           },
-          "_row_num": 3
+          "_row_num": 6
         },
         {
           "choice_list_name": "water_body_type",
@@ -245,7 +299,7 @@
               "text": "Transient water (only present when it rains)"
             }
           },
-          "_row_num": 4
+          "_row_num": 7
         }
       ]
     },
@@ -266,6 +320,12 @@
         "elementKey": "hh_id"
       },
       "water_bodies_geo": {
+        "_defn": [
+          {
+            "_row_num": 5,
+            "section_name": "survey"
+          }
+        ],
         "type": "object",
         "elementType": "geopoint",
         "properties": {
@@ -286,31 +346,17 @@
             "elementKey": "water_bodies_geo_accuracy"
           }
         },
-        "_defn": [
-          {
-            "_row_num": 5,
-            "section_name": "survey"
-          },
-          {
-            "_row_num": 3,
-            "section_name": "model"
-          }
-        ],
         "elementKey": "water_bodies_geo"
       },
       "water_bodies_type": {
-        "type": "string",
-        "valuesList": "water_body_type",
         "_defn": [
           {
             "_row_num": 6,
             "section_name": "survey"
-          },
-          {
-            "_row_num": 4,
-            "section_name": "model"
           }
         ],
+        "type": "string",
+        "valuesList": "water_body_type",
         "elementKey": "water_bodies_type"
       }
     },
@@ -433,6 +479,7 @@
         "prompts": [
           {
             "type": "note",
+            "name": "hh_id",
             "display": {
               "prompt": {
                 "text": "Household ID: {{data.hh_id}}"
@@ -447,6 +494,7 @@
           },
           {
             "type": "note",
+            "name": "group_water_body_info",
             "display": {
               "prompt": {
                 "text": "Water Body Details"
@@ -464,7 +512,7 @@
             "name": "water_bodies_geo",
             "display": {
               "prompt": {
-                "text": "53a(i). Record GPS coordinates for this body of water (mandatory)"
+                "text": "53a(i). Record GPS coordinates for this body of water (optional)"
               }
             },
             "_row_num": 5,
@@ -561,6 +609,12 @@
         "elementPath": "hh_id"
       },
       "water_bodies_geo": {
+        "_defn": [
+          {
+            "_row_num": 5,
+            "section_name": "survey"
+          }
+        ],
         "type": "object",
         "elementType": "geopoint",
         "properties": {
@@ -593,16 +647,6 @@
             "elementPath": "water_bodies_geo.accuracy"
           }
         },
-        "_defn": [
-          {
-            "_row_num": 5,
-            "section_name": "survey"
-          },
-          {
-            "_row_num": 3,
-            "section_name": "model"
-          }
-        ],
         "elementKey": "water_bodies_geo",
         "elementName": "water_bodies_geo",
         "elementSet": "data",
@@ -616,18 +660,14 @@
         "notUnitOfRetention": true
       },
       "water_bodies_type": {
-        "type": "string",
-        "valuesList": "water_body_type",
         "_defn": [
           {
             "_row_num": 6,
             "section_name": "survey"
-          },
-          {
-            "_row_num": 4,
-            "section_name": "model"
           }
         ],
+        "type": "string",
+        "valuesList": "water_body_type",
         "elementKey": "water_bodies_type",
         "elementName": "water_bodies_type",
         "elementSet": "data",
@@ -780,7 +820,7 @@
         "_aspect": "water_bodies_type",
         "_key": "displayChoicesList",
         "_type": "object",
-        "_value": "[{\"choice_list_name\":\"water_body_type\",\"data_value\":\"permanent\",\"display\":{\"title\":{\"text\":\"Permanent water (all year)\"}},\"_row_num\":2},{\"choice_list_name\":\"water_body_type\",\"data_value\":\"semi_permanent\",\"display\":{\"title\":{\"text\":\"Semi-permanent water (most of the year)\"}},\"_row_num\":3},{\"choice_list_name\":\"water_body_type\",\"data_value\":\"transient\",\"display\":{\"title\":{\"text\":\"Transient water (only present when it rains)\"}},\"_row_num\":4}]"
+        "_value": "[{\"choice_list_name\":\"water_body_type\",\"data_value\":\"permanent\",\"display\":{\"title\":{\"text\":\"Permanent water (all year)\"}},\"_row_num\":5},{\"choice_list_name\":\"water_body_type\",\"data_value\":\"semi_permanent\",\"display\":{\"title\":{\"text\":\"Semi-permanent water (most of the year)\"}},\"_row_num\":6},{\"choice_list_name\":\"water_body_type\",\"data_value\":\"transient\",\"display\":{\"title\":{\"text\":\"Transient water (only present when it rains)\"}},\"_row_num\":7}]"
       },
       {
         "_partition": "FormType",
