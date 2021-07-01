@@ -1,0 +1,731 @@
+---
+title: "Adhoc Livestock Analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '/tmp')
+```
+
+A R markdown document to create sleeping and exposure variable for each COST acd household.
+
+
+loading packages
+```{r}
+library(sf)
+library(dplyr)
+library(readr)
+library(geosphere)
+library(tidyr)
+library(haven)
+```
+
+
+Load data files (Bohemia mini census, COST acd households, COST acd attributes data)
+```{r}
+load("minicensus_data.RData")
+acd_cost <- read_csv("COST_ACD_Children_Ages_and_Gender._EE.16.04.2019.csv")
+df <- read_dta("acd_mopeia.dta")
+mini_cen_main <- minicensus_data$minicensus_main
+
+```
+
+
+
+CREATING VARIABLES
+SLEEPING VARIABLES
+VARIABLE : sleep_livestock
+
+- locate all COST households from the Cost Acd csv file
+- Draw an area (buffer) of radius 661m around each household
+```{r}
+#4326 : longlat
+#EPSG:3857 Projected coordinate system
+acd_cost%>%
+  st_as_sf(coords = c("longitude","latitude"), crs = 4326)%>%
+  st_transform(3857)%>%
+  st_buffer(661)-> cost_acd_buffer
+```
+
+
+Locate all BOHEMIA livestock's sleeping spots within the area:
+
+Those for which variables hh_n_cows_less_than_1_year, hh_n_cows_greater_than_1_year, 
+hh_n_pigs_less_than_6_weeks, and hh_n_pigs_greater_than_6_weeks ≠ NA.
+•
+Use location from variables hh_animals_distance_cattle_rainy_season_geo, 
+hh_animals_distance_cattle_dry_season_geo, hh_animals_rainy_season_geo_pigs, 
+hh_animals_dry_season_geo_pigs.
+
+```{r}
+livestock <- mini_cen_main %>% filter_at(vars(hh_n_cows_less_than_1_year,hh_n_cows_greater_than_1_year,hh_n_pigs_less_than_6_weeks,hh_n_pigs_greater_than_6_weeks),all_vars(!is.na(.)))%>%
+  mutate(n_livestock = hh_n_cows_less_than_1_year + hh_n_cows_greater_than_1_year + hh_n_pigs_greater_than_6_weeks + hh_n_pigs_less_than_6_weeks)%>%
+  separate(hh_geo_location, c("latitude","longitude","east","north")," ")%>%
+  select(-c("east","north"))%>%
+  separate(hh_animals_distance_cattle_dry_season_geo, c("cattle_dry_lat","cattle_dry_lon","east","north")," ")%>%
+  select(-c("east","north"))%>%
+  separate(hh_animals_distance_cattle_rainy_season_geo, c("cattle_rain_lat","cattle_rain_lon","east","north")," ")%>%
+  select(-c("east","north"))%>%
+  separate(hh_animals_rainy_season_geo_pigs, c("pig_dry_lat","pig_dry_lon","east","north")," ")%>%
+  select(-c("east","north"))%>%
+  separate(hh_animals_dry_season_geo_pigs, c("pig_rain_lat","pig_rain_lon","east","north")," ")%>%
+  select(-c("east","north"))
+
+
+cattle_geo_dry <- na.omit(livestock[,c("cattle_dry_lon","cattle_dry_lat","n_livestock")])%>%
+  setNames(c("longitude","latitude","n_livestock"))
+
+cattle_geo_rain <- na.omit(livestock[,c("cattle_rain_lon","cattle_rain_lat","n_livestock")])%>%
+  setNames(c("longitude","latitude","n_livestock"))
+
+pig_geo_dry <- na.omit(livestock[,c("pig_dry_lon","pig_dry_lat","n_livestock")])%>%
+  setNames(c("longitude","latitude","n_livestock"))
+
+pig_geo_rain <- na.omit(livestock[,c("pig_rain_lon","pig_rain_lat","n_livestock")])%>%
+  setNames(c("longitude","latitude","n_livestock"))
+
+liv_geo <- rbind(cattle_geo_dry,cattle_geo_rain,pig_geo_dry,pig_geo_rain)%>%
+  as.data.frame()%>%
+  mutate_at(c("longitude","latitude","n_livestock"),as.numeric)%>%
+  st_as_sf(coords = c("longitude","latitude"), crs = 4326)%>%
+  st_transform(3857)
+
+```
+
+
+
+- Locate all BOHEMIA livestock's sleeping spots within the area:
+
+buffer intersection with livestock sleep location
+(locate livestock sleeping sport within each COST acd household buffer)
+```{r}
+#intersect sleeping location with buffer and transform coordinates back to 4326(longlat)
+pnts <- st_intersection(liv_geo,cost_acd_buffer)%>%
+  st_transform(4326)
+```
+
+Find COST acd household coordinates within each buffer
+buffer centroid (COST acd household location) 
+```{r}
+#reproject buffer to 4326(loglat)
+cost_acd_buffer %>%
+  st_transform(4326) -> liv_sleep
+
+#identify cost acd household location in buffer
+liv_sleep$centroid <- st_centroid(liv_sleep$geometry)
+
+# join centroid to intersected points
+liv_sleep_df <- st_join(pnts, liv_sleep[c("centroid")], join = st_nearest_feature, left = T)
+```
+
+
+- Create (for each COST acd household) the variable sleep_livestock summing up RiskL values of all 
+  livestock-sleeping spots within the area.
+
+Creating sleep_livestock variable
+Calculate the distance , number of livestock and Risk of exposure of all livestock sleeping position in each buffer(COST acd household)
+```{r}
+library(geosphere)
+#Distance between COST acd households and livestock sleep locations
+hh_crds <- st_coordinates(liv_sleep_df)
+centroids <- st_coordinates(liv_sleep_df$centroid)
+liv_sleep_df$distance <- distHaversine(hh_crds, centroids)
+
+# Number of livestock, distance and Risk variables
+liv_sleep_df %>%
+  mutate(QL = if_else(n_livestock <= 9,1,
+                      if_else(n_livestock <= 18 & n_livestock > 9,2,
+                              if_else(n_livestock <= 33 & n_livestock > 18, 3,4))),
+         DL = if_else(distance <= 165.25,1,
+                      if_else(distance <= 330.5 & distance > 165.25,2,
+                              if_else(distance <= 495.75 & distance> 330.5,3,4))),
+         RiskL = QL/DL)%>%
+  group_by(perm_id)%>%
+  summarise(sleep_livestock = sum(RiskL))%>%as.data.frame() -> sleep_livestock
+```
+
+
+
+
+
+BOHEMIA PIGS SLEEP VARIABLE
+Creating sleep_pigs variable
+# Bohemia pigs
+
+Locate all BOHEMIA pigs' sleeping spots within the area:
+Those for which variables hh_n_pigs_less_than_6_weeks, and hh_n_pigs_greater_than_6_weeks 
+≠ NA.
+•
+Use location from variables hh_animals_rainy_season_geo_pigs, and 
+hh_animals_dry_season_geo_pigs
+```{r}
+df_pig <- mini_cen_main %>% filter_at(vars(hh_n_pigs_less_than_6_weeks,hh_n_pigs_greater_than_6_weeks),all_vars(!is.na(.)))%>%
+  mutate(n_pigs = hh_n_pigs_less_than_6_weeks + hh_n_pigs_greater_than_6_weeks)%>%
+  separate(hh_geo_location, c("lat","lon","east","north")," ")%>%
+  select(-c("east","north"))%>%
+  separate(hh_animals_rainy_season_geo_pigs, c("pig_dry_lat","pig_dry_lon","east","north")," ")%>%
+  select(-c("east","north"))%>%
+  separate(hh_animals_dry_season_geo_pigs, c("pig_rain_lat","pig_rain_lon","east","north")," ")%>%
+  select(-c("east","north"))
+
+pig_dry_geo <- na.omit(df_pig[,c("pig_dry_lon","pig_dry_lat","n_pigs")])%>%
+  setNames(c("longitude","latitude","n_pigs"))
+
+pig_rain_geo <- na.omit(df_pig[,c("pig_rain_lon","pig_rain_lat","n_pigs")])%>%
+  setNames(c("longitude","latitude","n_pigs"))
+
+pig_geo <- rbind(pig_dry_geo,pig_rain_geo)%>%
+  as.data.frame()%>%
+  mutate_at(c("longitude","latitude","n_pigs"),as.numeric)%>%
+  st_as_sf(coords = c("longitude","latitude"), crs = 4326)%>%
+  st_transform(3857)
+```
+
+
+- Locate all BOHEMIA pigs sleeping spots within the area:
+
+buffer intersection with livestock sleep location
+locate livestock sleeping variables within in COST acd household 661m buffer
+```{r}
+#intersection of livestock sleeping position and buffer
+pnts <- st_intersection(pig_geo,cost_acd_buffer)%>%
+  st_transform(4326)
+```
+
+
+buffer centroid (COST acd household location) to calculate distance
+```{r}
+#transform buffer to longlat (4326)
+cost_acd_buffer %>%
+  st_transform(4326) -> pig_sleep
+
+#centroid
+pig_sleep$centroid <- st_centroid(pig_sleep$geometry)
+pig_sleep_df <- st_join(pnts, pig_sleep[c("centroid")], join = st_nearest_feature, left = T)
+```
+
+
+- Create (for each COST acd household) the variable sleep_pigs summing up RiskP values of all 
+  PIG-sleeping spots within the area.
+
+Creating sleep_pig variable
+Calculate the distance , number of livestock and Risk of exposure of all pig sleeping positions in each buffer(COST acd household)
+```{r}
+
+#calculate distance
+hh_crds <- st_coordinates(pig_sleep_df)
+centroids <- st_coordinates(pig_sleep_df$centroid)
+pig_sleep_df$distance <- distHaversine(hh_crds, centroids)
+
+#creating variables
+pig_sleep_df %>%
+  mutate(QP = if_else(n_pigs <= 9,1,
+                      if_else(n_pigs <= 19 & n_pigs > 9,2,
+                              if_else(n_pigs <= 35 & n_pigs > 19, 3,4))),
+         DP = if_else(distance <= 165.25,1,
+                      if_else(distance <= 330.5 & distance > 165.25,2,
+                              if_else(distance <= 495.75 & distance> 330.5,3,4))),
+         RiskP = QP/DP)%>%
+  group_by(perm_id)%>%
+  summarise(sleep_pigs = sum(RiskP)) %>% as.data.frame() -> sleep_pigs
+```
+
+
+
+BOHEMIA CATTLE SLEEP VARIABLE
+Creating sleep_cattle variable
+# Bohemia Cattle
+
+
+Locate all BOHEMIA cattle's sleeping spots within the area:
+Those for which variables hh_n_cows_less_than_1_year and hh_n_cows_greater_than_1_year ≠ NA.
+•
+Use location from variables hh_animals_distance_cattle_rainy_season_geo and 
+hh_animals_distance_cattle_dry_season_geo.
+
+
+```{r}
+df_cow <- mini_cen_main %>% filter_at(vars(hh_n_cows_less_than_1_year,hh_n_cows_greater_than_1_year),all_vars(!is.na(.)))%>%
+  mutate(n_cows = hh_n_cows_less_than_1_year + hh_n_cows_greater_than_1_year)%>%
+  separate(hh_geo_location, c("lat","lon","east","north")," ")%>%
+  select(-c("east","north"))%>%
+  separate(hh_animals_distance_cattle_dry_season_geo, c("cattle_dry_lat","cattle_dry_lon","east","north")," ")%>%
+  select(-c("east","north"))%>%
+  separate(hh_animals_distance_cattle_rainy_season_geo, c("cattle_rain_lat","cattle_rain_lon","east","north")," ")%>%
+  select(-c("east","north"))
+
+
+cattle_dry_geo <- na.omit(df_cow[,c("cattle_dry_lon","cattle_dry_lat","n_cows")])%>%
+  setNames(c("longitude","latitude","n_cows"))
+
+cattle_rain_geo <- na.omit(df_cow[,c("cattle_rain_lon","cattle_rain_lat","n_cows")])%>%
+  setNames(c("longitude","latitude","n_cows"))
+
+cow_geo <- rbind(cattle_dry_geo,cattle_rain_geo)%>%
+  as.data.frame()%>%
+  mutate_at(c("longitude","latitude","n_cows"),as.numeric)%>%
+  st_as_sf(coords = c("longitude","latitude"), crs = 4326)%>%
+  st_transform(3857)
+
+```
+
+
+- Locate all BOHEMIA cattle's sleeping spots within the area:
+
+buffer intersection with cattle sleep location
+locate cattle sleeping variables within each COST acd household 661m buffer
+```{r}
+pnts <- st_intersection(cow_geo,cost_acd_buffer)%>%
+  st_transform(4326)
+```
+
+
+buffer centroid (COST acd household location) to calculate distance between cattle sleeping positions and COST acd household
+```{r}
+#transform buffer to longlat (4326)
+cost_acd_buffer %>%
+  st_transform(4326) -> cow_sleep
+
+# centroid of buffer (COST acd household locations)
+cow_sleep$centroid <- st_centroid(cow_sleep$geometry)
+cow_sleep_df <- st_join(pnts, cow_sleep[c("centroid")], join = st_nearest_feature, left = T)
+```
+
+
+
+- Create (for each COST acd household) the variable sleep_cattle summing up RiskP values of all cattle sleeping spots within the area.
+
+Creating sleep_cattle variable
+Calculate the distance , number of livestock and Risk of exposure of all cattle sleeping positions in each buffer(COST acd household position)
+```{r}
+library(geosphere)
+#calculate distance within buffer (cost acd households)
+hh_crds <- st_coordinates(cow_sleep_df)
+centroids <- st_coordinates(cow_sleep_df$centroid)
+cow_sleep_df$distance <- distHaversine(hh_crds, centroids)
+
+# Number of cattle, distance and Risk variables
+cow_sleep_df %>%
+  mutate(QC = if_else(n_cows <= 4,1,
+                      if_else(n_cows <= 9 & n_cows > 4,2,
+                              if_else(n_cows <= 16 & n_cows > 9, 3,4))),
+         DC = if_else(distance <= 165.25,1,
+                      if_else(distance <= 330.5 & distance > 165.25,2,
+                              if_else(distance <= 495.75 & distance> 330.5,3,4))),
+         RiskC = QC/DC)%>%
+  group_by(perm_id)%>%
+  summarise(sleep_cattle = sum(RiskC))%>%as.data.frame() -> sleep_cattle
+```
+
+
+
+
+
+CREATING EXPOSURE VARIABLES USING COST ACD HOUSEHOLD DATA AND BOHEMIA MINI CENSUS DATA.
+
+
+Exposure variable for all livestocks
+
+select relevant variables from COST ACD data
+```{r}
+library(dplyr)
+acdcore_vars <- df %>%
+  select(perm_id,
+         family_id_old,
+         hf_name,
+         hf_distance,
+         acdcore_animals,
+         acdcore_coats_yn,
+         acdcore_pigs_yn,
+         acdcore_pigs_yn,
+         acdcore_cattle,
+         acdcore_chick,
+         acdcore_coats,
+         acdcore_horse,
+         acdcore_pigs,
+         acdcore_sheep)
+
+acdcore_vars <- acdcore_vars[!duplicated(acdcore_vars),]
+```
+
+
+Join selected variables with COST acd core household data
+```{r}
+acd_df <- acd_cost %>%
+  left_join(acdcore_vars, by = "perm_id")%>%
+  filter(!is.na(acdcore_animals))
+```
+
+
+locate all cost acd households and create an area of 661m radius around each household
+```{r}
+library(sf)
+acd_df %>%
+  select(longitude,latitude)%>%
+  st_as_sf(coords = c("longitude","latitude"), crs = 4326)%>%
+  st_transform(3857)%>%
+  st_buffer(661)-> acd_hh_buffer
+```
+
+
+locate all cost acd households that owns livestock (cattle, pigs, chicks, horses etc). acdcore_animals == 1
+```{r}
+acd_df %>%
+  filter(acdcore_animals == 1)%>%
+  st_as_sf(coords = c("longitude","latitude"), crs = 4326)%>%
+  st_transform(3857)-> acd_hh_animals
+```
+
+
+intersection (points that intersect buffer)
+Find the livestock owning household within each area (661m radius)
+```{r}
+int <- st_intersection(acd_hh_animals,acd_hh_buffer)%>%
+  st_transform(4326)
+```
+Find the geolocation of each COST acd household in each buffer(661m radius)
+```{r}
+#transform buffer back to longlat
+acd_hh_buffer %>%
+  st_transform(4326) -> all_liv
+
+#create centroid
+all_liv$centroid <- st_centroid(all_liv$geometry)
+livstock <- st_join(int, all_liv, join = st_nearest_feature, left = T)
+```
+
+
+Find the Distance of each household in the area(66m buffer) to each COST acd household and the number of livestock per each household in buffer.
+Create the exp_acd_livestock variables
+```{r}
+# Distance between cost acd household within each buffer
+hh_crds <- st_coordinates(livstock)
+centroids <- st_coordinates(livstock$centroid)
+livstock$distance <- distHaversine(hh_crds, centroids)
+
+#Create the distance , number of livestock and risk variables.
+livstock %>%
+  mutate_at(vars(acdcore_chick), ~replace(., is.na(.), 0))%>%
+  mutate(n_livestock = acdcore_cattle + acdcore_coats + acdcore_horse + acdcore_pigs + acdcore_sheep + acdcore_chick,
+         QL = if_else(n_livestock <= 4,1,
+                      if_else(n_livestock <= 8 & n_livestock > 4,2,
+                              if_else(n_livestock <= 12 & n_livestock > 8, 3,4))),
+         DL = if_else(distance <= 165.25,1,
+                           if_else(distance <= 330.5 & distance > 165.25,2,
+                                   if_else(distance <= 495.75 & distance> 330.5,3,4))),
+         RiskL = QL/DL)%>%
+  group_by(perm_id)%>%
+  summarise(exp_acd_livestock = sum(RiskL))%>%as.data.frame()-> exp_acd_livestock
+```
+
+
+
+
+
+
+Creating Exposure variable for PIGS (exp_acd_pigs)
+
+locate all cost acd households that owns pigs
+```{r}
+acd_df %>%
+  filter(acdcore_pigs_yn == 1)%>%
+  st_as_sf(coords = c("longitude","latitude"), crs = 4326)%>%
+  st_transform(3857)-> acd_pigs
+```
+
+
+intersection (points that intersect buffer)
+Find the pig owning household within each area (661m radius)
+```{r}
+#intersect and transform to longlat (4326)
+pig_int <- st_intersection(acd_pigs,acd_hh_buffer)%>%
+  st_transform(4326)
+```
+
+Find the geolocation of each COST acd household in each buffer(661m radius)
+```{r}
+# transform coordinates to longlat (4326)
+acd_hh_buffer %>%
+  st_transform(4326) -> pigs
+
+# calculate centroid
+pigs$centroid <- st_centroid(pigs$geometry)
+pigs_df <- st_join(pig_int, pigs, join = st_nearest_feature, left = T)
+```
+
+
+Find the Distance of each household in the area(66m buffer) to each COST acd household and the number of pigs per each household in buffer
+```{r}
+library(geosphere)
+# calculate distance between each pig owning cost acd household and buffer centroid 
+hh_crds <- st_coordinates(pigs_df)
+centroids <- st_coordinates(pigs_df$centroid)
+pigs_df$distance <- distHaversine(hh_crds, centroids)
+
+#Create the distance , number of pigs and risk variables
+pigs_df %>%
+  mutate(QP = if_else(acdcore_pigs <= 3,1,
+                      if_else(acdcore_pigs <= 6 & acdcore_pigs > 3,2,
+                              if_else(acdcore_pigs <= 9 & acdcore_pigs > 8, 3,4))),
+         DP = if_else(distance <= 165.25,1,
+                      if_else(distance <= 330.5 & distance > 165.25,2,
+                              if_else(distance <= 495.75 & distance> 330.5,3,4))),
+         RiskP = QP/DP)%>%
+  group_by(perm_id)%>%
+  summarise(exp_acd_pigs = sum(RiskP))%>%as.data.frame() -> exp_acd_pigs
+```
+
+
+
+
+Creating Exposure variable for goats (exp_acd_goats)
+
+locate all cost acd households that owns GOATS
+```{r}
+acd_df %>%
+  filter(acdcore_coats_yn == 1)%>%
+  st_as_sf(coords = c("longitude","latitude"), crs = 4326)%>%
+  st_transform(3857)-> acd_goats
+```
+
+
+intersection (points that intersect buffer)
+Find the GOAT owning household within each area (661m radius)
+```{r}
+goat_int <- st_intersection(acd_goats,acd_hh_buffer)%>%
+  st_transform(4326)
+```
+
+
+
+Find the geolocation of each COST acd household in each buffer(661m radius)
+```{r}
+#transform to longlat(4326)
+acd_hh_buffer %>%
+  st_transform(4326) -> goats
+
+#create centroid 
+goats$centroid <- st_centroid(goats$geometry)
+goats_df <- st_join(goat_int, goats, join = st_nearest_feature, left = T)
+```
+
+
+Find the Distance of each household in the area(66m buffer) to each COST acd household and the number of GOATS per each household in buffer
+```{r}
+library(geosphere)
+# calculate distance between each cost goat owning acd household and buffer centroid
+hh_crds <- st_coordinates(goats_df)
+centroids <- st_coordinates(goats_df$centroid)
+goats_df$distance <- distHaversine(hh_crds, centroids)
+
+#Create the distance , number of goats and risk variables
+goats_df %>%
+  mutate(QG = if_else(acdcore_coats <= 2,1,
+                      if_else(acdcore_coats <= 5 & acdcore_coats > 2,2,
+                              if_else(acdcore_coats <= 8 & acdcore_coats > 5, 3,4))),
+         DG = if_else(distance <= 165.25,1,
+                      if_else(distance <= 330.5 & distance > 165.25,2,
+                              if_else(distance <= 495.75 & distance> 330.5,3,4))),
+         RiskG = QG/DG)%>%
+  group_by(perm_id)%>%
+  summarise(exp_acd_goats = sum(RiskG))%>% as.data.frame()-> exp_acd_goats
+```
+
+
+
+CREATING EXPOSURE VARIABLE USING COST ACD HOUSEHOLD AND BOHEMIA HOUSEHOLDS DATA
+
+Bohemia livestock (exp_boh_livestock)
+
+locate all bohemia households that owns livestock
+```{r}
+boh_liv <- mini_cen_main %>%
+  filter(hh_owns_cattle_or_pigs == "Yes")%>%
+  separate(hh_geo_location, c("latitude","longitude","east","north")," ")%>%
+  filter_at(vars(hh_n_cows_less_than_1_year,hh_n_cows_greater_than_1_year,hh_n_pigs_less_than_6_weeks,hh_n_pigs_greater_than_6_weeks),all_vars(!is.na(.)))%>%
+  mutate(n_livestock = hh_n_cows_less_than_1_year + hh_n_cows_greater_than_1_year + hh_n_pigs_less_than_6_weeks + hh_n_pigs_greater_than_6_weeks)%>%
+  select(c("longitude","latitude","n_livestock"))%>%
+  st_as_sf(coords = c("longitude","latitude"), crs = 4326)%>%
+  st_transform(3857)
+```
+
+
+intersection (points that intersect buffer)
+Find the livestock owning household within each area (661m radius) of COST acd household
+```{r}
+boh_int <- st_intersection(boh_liv,cost_acd_buffer)%>%
+  st_transform(4326)
+```
+
+Find the geolocation of each COST acd household in each buffer(661m radius)
+```{r}
+# reproject buffer to longlat(4326)
+acd_hh_buffer %>%
+  st_transform(4326) -> bohliv
+
+#create centroid 
+bohliv$centroid <- st_centroid(bohliv$geometry)
+boh_liv_df <- st_join(boh_int, bohliv[c("centroid")], join = st_nearest_feature, left = T)
+```
+
+
+Find the Distance of each household in the area(66m buffer) to each COST acd household and the number of GOATS per each household in buffer
+```{r}
+library(geosphere)
+# calculate distance between each cost bohemia livestock owning  household and buffer centroid (COST acd household)
+hh_crds <- st_coordinates(boh_liv_df)
+centroids <- st_coordinates(boh_liv_df$centroid)
+boh_liv_df$distance <- distHaversine(hh_crds, centroids)
+
+
+#Create the distance , number of livestock and risk esposure variables
+boh_liv_df %>%
+  mutate(QL = if_else(n_livestock <= 9,1,
+                      if_else(n_livestock <= 15 & n_livestock > 9,2,
+                              if_else(n_livestock <= 33 & n_livestock > 18, 3,4))),
+         DL = if_else(distance <= 165.25,1,
+                      if_else(distance <= 330.5 & distance > 165.25,2,
+                              if_else(distance <= 495.75 & distance> 330.5,3,4))),
+         RiskL = QL/DL)%>%
+  group_by(perm_id)%>%
+  summarise(exp_boh_livestock = sum(RiskL))%>%as.data.frame()-> exp_boh_livestock
+```
+
+
+
+
+Bohemia PIGS and COST acd households(exp_boh_pigs variable)
+
+locate all bohemia households that owns pig
+```{r}
+boh_pigs<-mini_cen_main %>% filter_at(vars(hh_n_pigs_less_than_6_weeks,hh_n_pigs_greater_than_6_weeks),all_vars(!is.na(.)))%>%
+  mutate(n_pigs = hh_n_pigs_less_than_6_weeks + hh_n_pigs_greater_than_6_weeks)%>%
+  separate(hh_geo_location, c("latitude","longitude","east","north")," ")%>%
+  select(c("longitude","latitude","n_pigs"))%>%
+  st_as_sf(coords = c("longitude","latitude"), crs = 4326)%>%
+  st_transform(3857)
+  
+```
+
+
+intersection (points that intersect buffer)
+Find the bohemia pig owning household within each area (661m radius) of COST acd household
+```{r}
+#intersect and transform to longlat
+boh_int <- st_intersection(boh_pigs,cost_acd_buffer)%>%
+  st_transform(4326)
+```
+
+Find the geolocation of each COST acd household in each buffer(661m radius)
+```{r}
+#transform coordinates
+cost_acd_buffer %>%
+  st_transform(4326) -> bohpigs
+
+#create centroid
+bohpigs$centroid <- st_centroid(bohpigs$geometry)
+boh_pig_df <- st_join(boh_int, bohpigs[c("centroid")], join = st_nearest_feature, left = T)
+```
+
+
+Find the Distance of each household in the area(66m buffer) to each COST acd household and the number of GOATS per each household in buffer
+```{r}
+library(geosphere)
+# calculate distance between each cost bohemia pig owning  household and buffer centroid (COST acd household)
+hh_crds <- st_coordinates(boh_pig_df)
+centroids <- st_coordinates(boh_pig_df$centroid)
+boh_pig_df$distance <- distHaversine(hh_crds, centroids)
+
+#Create the distance , number of pigs and risk exposure variables
+boh_pig_df %>%
+  mutate(QP = if_else(n_pigs <= 9,1,
+                      if_else(n_pigs <= 19 & n_pigs > 9,2,
+                              if_else(n_pigs <= 35 & n_pigs > 19, 3,4))),
+         DP = if_else(distance <= 165.25,1,
+                      if_else(distance <= 330.5 & distance > 165.25,2,
+                              if_else(distance <= 495.75 & distance> 330.5,3,4))),
+         RiskP = QP/DP)%>%
+  group_by(perm_id)%>%
+  summarise(exp_boh_pigs = sum(RiskP))%>%as.data.frame()-> exp_boh_pigs
+```
+
+
+
+Bohemia CATTLE and COST acd households(exp_boh_cattle variable)
+locate all bohemia households that owns cattle
+
+
+Locate all BOHEMIA households that own cattle within the area.
+```{r}
+boh_cows<-mini_cen_main %>% filter_at(vars(hh_n_cows_less_than_1_year,hh_n_cows_greater_than_1_year),all_vars(!is.na(.)))%>%
+  mutate(n_cows = hh_n_cows_less_than_1_year + hh_n_cows_greater_than_1_year)%>%
+  separate(hh_geo_location, c("latitude","longitude","east","north")," ")%>%
+  select(c("longitude","latitude","n_cows"))%>%
+  st_as_sf(coords = c("longitude","latitude"), crs = 4326)%>%
+  st_transform(3857)
+  
+```
+
+intersection (points that intersect buffer)
+Find the bohemia cattle owning household within each area (661m radius) of COST acd household
+```{r}
+#intersect and transform to longlat
+boh_int <- st_intersection(boh_cows,cost_acd_buffer)%>%
+  st_transform(4326)
+```
+
+Find the geolocation of each COST acd household in each buffer(661m radius)
+```{r}
+#transform coordinates
+cost_acd_buffer %>%
+  st_transform(4326) -> bohcows
+
+#create centroid of COST acd households
+bohcows$centroid <- st_centroid(bohcows$geometry)
+boh_cows_df <- st_join(boh_int, bohcows[c("centroid")], join = st_nearest_feature, left = T)
+```
+
+
+Find the Distance of each household in the area(66m buffer) to each COST acd household and the number of CATTLE per each household in buffer
+```{r}
+library(geosphere)
+# calculate distance between each cost bohemia cow owning  household and buffer centroid (COST acd household)
+hh_crds <- st_coordinates(boh_cows_df)
+centroids <- st_coordinates(boh_cows_df$centroid)
+boh_cows_df$distance <- distHaversine(hh_crds, centroids)
+
+
+#Create the distance , number of cattle and risk exposure variables
+boh_cows_df %>%
+  mutate(QC = if_else(n_cows <= 4,1,
+                      if_else(n_cows <= 9 & n_cows > 4,2,
+                              if_else(n_cows <= 16 & n_cows > 9, 3,4))),
+         DC = if_else(distance <= 165.25,1,
+                      if_else(distance <= 330.5 & distance > 165.25,2,
+                              if_else(distance <= 495.75 & distance> 330.5,3,4))),
+         RiskC = QC/DC)%>%
+  group_by(perm_id)%>%
+  summarise(exp_boh_cattle = sum(RiskC))%>% as.data.frame()->exp_boh_cattle
+```
+
+
+
+merge all varables
+```{r}
+
+library(data.table)
+final <- Reduce(function(...) merge(..., by='perm_id', all.x=TRUE), list(acd_cost[,-3],
+                                                                      sleep_livestock[,-3],
+                                                                      sleep_pigs[,-3],
+                                                                      sleep_cattle[,-3],
+                                                                      exp_acd_livestock[,-3],
+                                                                      exp_acd_pigs[,-3],
+                                                                      exp_acd_goats[,-3],
+                                                                      exp_boh_livestock[,-3],
+                                                                      exp_boh_pigs[,-3],
+                                                                      exp_boh_cattle[,-3]))
+
+fwrite(final, "COST_ACD_variables.csv")
+```
+
