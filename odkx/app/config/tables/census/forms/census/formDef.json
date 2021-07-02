@@ -1316,7 +1316,7 @@
       },
       {
         "clause": "if",
-        "condition": "selected(data('hh_minicenced'), 'no')",
+        "condition": "selected(data('hh_minicenced'), 'no') || selected(data('hh_country'), 'Tanzania')",
         "_row_num": 130
       },
       {
@@ -1332,7 +1332,7 @@
           "section": "socio_econ_h2"
         },
         "choice_filter": "choice_item.country === data('hh_country')",
-        "required": "selected(data('hh_minicenced'), 'no')",
+        "required": "selected(data('hh_minicenced'), 'no') || selected(data('hh_country'), 'Tanzania')",
         "hideInContents": "selected(data('hh_minicenced'), 'yes')",
         "validation_tags": "finalize",
         "_row_num": 132
@@ -18510,7 +18510,7 @@
               "section": "socio_econ_h2"
             },
             "choice_filter": "choice_item.country === data('hh_country')",
-            "required": "selected(data('hh_minicenced'), 'no')",
+            "required": "selected(data('hh_minicenced'), 'no') || selected(data('hh_country'), 'Tanzania')",
             "hideInContents": "selected(data('hh_minicenced'), 'yes')",
             "validation_tags": "finalize",
             "_row_num": 132,
@@ -21324,7 +21324,7 @@
           },
           {
             "clause": "if",
-            "condition": "selected(data('hh_minicenced'), 'no')",
+            "condition": "selected(data('hh_minicenced'), 'no') || selected(data('hh_country'), 'Tanzania')",
             "_row_num": 130,
             "__rowNum__": 129,
             "_token_type": "goto_label",
