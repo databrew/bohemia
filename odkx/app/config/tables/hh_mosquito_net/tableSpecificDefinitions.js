@@ -14,7 +14,7 @@ window.odkTableSpecificDefinitions = {
       "text": {
         "default": "55b. Did someone sleep inside this net last night?",
         "pt": "55b. Alguém dormiu dentro desta rede na noite passada?",
-        "sw": "55b. Je, kunaye aliyelala ndani ya chandarua hiki usiku uliopita?"
+        "sw": "55b. Je, kuna aliyelala ndani ya chandarua hiki usiku uliopita?"
       },
       "_row_num": 3
     },
