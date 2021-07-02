@@ -3412,11 +3412,19 @@
       },
       {
         "choice_list_name": "treatment",
+        "data_value": "no",
+        "display": {
+          "title": "no"
+        },
+        "_row_num": 243
+      },
+      {
+        "choice_list_name": "treatment",
         "data_value": "Treatment_for_pain",
         "display": {
           "title": "Treatment_for_pain"
         },
-        "_row_num": 243
+        "_row_num": 244
       },
       {
         "choice_list_name": "treatment",
@@ -3424,7 +3432,7 @@
         "display": {
           "title": "Contraceptive"
         },
-        "_row_num": 244
+        "_row_num": 245
       },
       {
         "choice_list_name": "treatment",
@@ -3432,7 +3440,7 @@
         "display": {
           "title": "Treatment_for_malaria"
         },
-        "_row_num": 245
+        "_row_num": 246
       },
       {
         "choice_list_name": "treatment",
@@ -3440,7 +3448,7 @@
         "display": {
           "title": "Antihistamine"
         },
-        "_row_num": 246
+        "_row_num": 247
       },
       {
         "choice_list_name": "treatment",
@@ -3448,7 +3456,7 @@
         "display": {
           "title": "Antiretrovirals"
         },
-        "_row_num": 247
+        "_row_num": 248
       },
       {
         "choice_list_name": "treatment",
@@ -3456,7 +3464,7 @@
         "display": {
           "title": "Treatment_for_tuberculosis"
         },
-        "_row_num": 248
+        "_row_num": 249
       },
       {
         "choice_list_name": "treatment",
@@ -3464,7 +3472,7 @@
         "display": {
           "title": "Antibiotic"
         },
-        "_row_num": 249
+        "_row_num": 250
       },
       {
         "choice_list_name": "treatment",
@@ -3472,7 +3480,7 @@
         "display": {
           "title": "Treatment_for_stress"
         },
-        "_row_num": 250
+        "_row_num": 251
       },
       {
         "choice_list_name": "treatment",
@@ -3480,7 +3488,7 @@
         "display": {
           "title": "Treatment_for_mental_illness"
         },
-        "_row_num": 251
+        "_row_num": 252
       },
       {
         "choice_list_name": "treatment",
@@ -3488,7 +3496,7 @@
         "display": {
           "title": "Anti-fungal_treatment"
         },
-        "_row_num": 252
+        "_row_num": 253
       },
       {
         "choice_list_name": "treatment",
@@ -3496,7 +3504,7 @@
         "display": {
           "title": "Treatment_for_epilepsy"
         },
-        "_row_num": 253
+        "_row_num": 254
       },
       {
         "choice_list_name": "treatment",
@@ -3504,7 +3512,7 @@
         "display": {
           "title": "Treatment_for_diarrhoea"
         },
-        "_row_num": 254
+        "_row_num": 255
       },
       {
         "choice_list_name": "treatment",
@@ -3512,7 +3520,7 @@
         "display": {
           "title": "Treatment_for_blood_pressure"
         },
-        "_row_num": 255
+        "_row_num": 256
       },
       {
         "choice_list_name": "treatment",
@@ -3520,7 +3528,7 @@
         "display": {
           "title": "Traditional_medicine"
         },
-        "_row_num": 256
+        "_row_num": 257
       },
       {
         "choice_list_name": "treatment",
@@ -3528,7 +3536,7 @@
         "display": {
           "title": "dk"
         },
-        "_row_num": 257
+        "_row_num": 258
       },
       {
         "choice_list_name": "treatment",
@@ -3536,21 +3544,13 @@
         "display": {
           "title": "pna"
         },
-        "_row_num": 258
+        "_row_num": 259
       },
       {
         "choice_list_name": "treatment",
         "data_value": "other",
         "display": {
           "title": "other"
-        },
-        "_row_num": 259
-      },
-      {
-        "choice_list_name": "treatment",
-        "data_value": "no",
-        "display": {
-          "title": "no"
         },
         "_row_num": 260
       },
@@ -7629,11 +7629,19 @@
       "treatment": [
         {
           "choice_list_name": "treatment",
+          "data_value": "no",
+          "display": {
+            "title": "no"
+          },
+          "_row_num": 243
+        },
+        {
+          "choice_list_name": "treatment",
           "data_value": "Treatment_for_pain",
           "display": {
             "title": "Treatment_for_pain"
           },
-          "_row_num": 243
+          "_row_num": 244
         },
         {
           "choice_list_name": "treatment",
@@ -7641,7 +7649,7 @@
           "display": {
             "title": "Contraceptive"
           },
-          "_row_num": 244
+          "_row_num": 245
         },
         {
           "choice_list_name": "treatment",
@@ -7649,7 +7657,7 @@
           "display": {
             "title": "Treatment_for_malaria"
           },
-          "_row_num": 245
+          "_row_num": 246
         },
         {
           "choice_list_name": "treatment",
@@ -7657,7 +7665,7 @@
           "display": {
             "title": "Antihistamine"
           },
-          "_row_num": 246
+          "_row_num": 247
         },
         {
           "choice_list_name": "treatment",
@@ -7665,7 +7673,7 @@
           "display": {
             "title": "Antiretrovirals"
           },
-          "_row_num": 247
+          "_row_num": 248
         },
         {
           "choice_list_name": "treatment",
@@ -7673,7 +7681,7 @@
           "display": {
             "title": "Treatment_for_tuberculosis"
           },
-          "_row_num": 248
+          "_row_num": 249
         },
         {
           "choice_list_name": "treatment",
@@ -7681,7 +7689,7 @@
           "display": {
             "title": "Antibiotic"
           },
-          "_row_num": 249
+          "_row_num": 250
         },
         {
           "choice_list_name": "treatment",
@@ -7689,7 +7697,7 @@
           "display": {
             "title": "Treatment_for_stress"
           },
-          "_row_num": 250
+          "_row_num": 251
         },
         {
           "choice_list_name": "treatment",
@@ -7697,7 +7705,7 @@
           "display": {
             "title": "Treatment_for_mental_illness"
           },
-          "_row_num": 251
+          "_row_num": 252
         },
         {
           "choice_list_name": "treatment",
@@ -7705,7 +7713,7 @@
           "display": {
             "title": "Anti-fungal_treatment"
           },
-          "_row_num": 252
+          "_row_num": 253
         },
         {
           "choice_list_name": "treatment",
@@ -7713,7 +7721,7 @@
           "display": {
             "title": "Treatment_for_epilepsy"
           },
-          "_row_num": 253
+          "_row_num": 254
         },
         {
           "choice_list_name": "treatment",
@@ -7721,7 +7729,7 @@
           "display": {
             "title": "Treatment_for_diarrhoea"
           },
-          "_row_num": 254
+          "_row_num": 255
         },
         {
           "choice_list_name": "treatment",
@@ -7729,7 +7737,7 @@
           "display": {
             "title": "Treatment_for_blood_pressure"
           },
-          "_row_num": 255
+          "_row_num": 256
         },
         {
           "choice_list_name": "treatment",
@@ -7737,7 +7745,7 @@
           "display": {
             "title": "Traditional_medicine"
           },
-          "_row_num": 256
+          "_row_num": 257
         },
         {
           "choice_list_name": "treatment",
@@ -7745,7 +7753,7 @@
           "display": {
             "title": "dk"
           },
-          "_row_num": 257
+          "_row_num": 258
         },
         {
           "choice_list_name": "treatment",
@@ -7753,21 +7761,13 @@
           "display": {
             "title": "pna"
           },
-          "_row_num": 258
+          "_row_num": 259
         },
         {
           "choice_list_name": "treatment",
           "data_value": "other",
           "display": {
             "title": "other"
-          },
-          "_row_num": 259
-        },
-        {
-          "choice_list_name": "treatment",
-          "data_value": "no",
-          "display": {
-            "title": "no"
           },
           "_row_num": 260
         }
