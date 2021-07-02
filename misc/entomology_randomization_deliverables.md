@@ -1,5 +1,8 @@
 # Entomology randomization deliverables
 
+(Currently under development at
+
+
 This document briefly describes the deliverables which Databrew will generate for the randomization component of the Bohemia project's entomology study.
 
 ## Upstream dependencies
