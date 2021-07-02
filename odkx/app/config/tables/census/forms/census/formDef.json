@@ -1333,7 +1333,7 @@
         },
         "choice_filter": "choice_item.country === data('hh_country')",
         "required": "selected(data('hh_minicenced'), 'no') || selected(data('hh_country'), 'Tanzania')",
-        "hideInContents": "selected(data('hh_minicenced'), 'yes')",
+        "hideInContents": "selected(data('hh_minicenced'), 'yes') && not(selected(data('hh_country'), 'Tanzania'))",
         "validation_tags": "finalize",
         "_row_num": 132
       },
@@ -18513,7 +18513,7 @@
             },
             "choice_filter": "choice_item.country === data('hh_country')",
             "required": "selected(data('hh_minicenced'), 'no') || selected(data('hh_country'), 'Tanzania')",
-            "hideInContents": "selected(data('hh_minicenced'), 'yes')",
+            "hideInContents": "selected(data('hh_minicenced'), 'yes') && not(selected(data('hh_country'), 'Tanzania'))",
             "validation_tags": "finalize",
             "_row_num": 132,
             "__rowNum__": 131,
