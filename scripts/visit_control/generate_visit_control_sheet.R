@@ -155,8 +155,9 @@ df <- list_generation_visit_control(census_data = census_data,
                               keyfile = keyfile,
                               keyfile_public = keyfile_public,
                               location = NULL, #c('NOR', 'CHM', 'BBB', 'AGO', 'CHT'), # set to null in order to do all locations
-                              output_file = output_file, # set to null in order to return a dataframe in memory
+                              output_file = NULL, #output_file, # set to null in order to return a dataframe in memory
                               fake_data = FALSE,
+                              add_ids = NULL, # set as a number to add additional empty ids
                               html = FALSE) # set to TRUE if you want an html table ready for printing
 
 

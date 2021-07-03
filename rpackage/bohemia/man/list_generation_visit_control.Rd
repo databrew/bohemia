@@ -14,7 +14,8 @@ list_generation_visit_control(
   location = NULL,
   output_file = NULL,
   fake_data = FALSE,
-  html = FALSE
+  html = FALSE,
+  add_ids = NULL
 )
 }
 \arguments{
@@ -37,6 +38,8 @@ list_generation_visit_control(
 \item{fake_data}{Whether to use fake data or not}
 
 \item{html}{Whether to return a print-ready html table (intead of the default csv)}
+
+\item{add_ids}{How many additional (non-used) IDs to add for the hamlet in question. By default, NULL (meaning none)}
 }
 \value{
 A table will be created

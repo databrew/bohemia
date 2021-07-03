@@ -11,6 +11,7 @@
 #' @param output_file The name of the spreadsheet to be written (csv file); if null, will return the table in memory
 #' @param fake_data Whether to use fake data or not
 #' @param html Whether to return a print-ready html table (intead of the default csv)
+#' @param add_ids How many additional (non-used) IDs to add for the hamlet in question. By default, NULL (meaning none)
 #' @import dplyr
 #' @import PKI
 #' @import readr
@@ -27,7 +28,8 @@ list_generation_visit_control <- function(census_data,
                                           location = NULL,
                                           output_file = NULL,
                                           fake_data = FALSE,
-                                          html = FALSE){
+                                          html = FALSE,
+                                          add_ids = NULL){
   
   # # REMOVE THE BELOW
   # keyfile <- '../../../credentials/bohemia_priv.pem'
@@ -167,6 +169,48 @@ list_generation_visit_control <- function(census_data,
                     District, Ward, Village, Hamlet, contact_information, previous_attempts)
   }
   
+  
+  # Add ids
+  if(!is.null(add_ids)){
+    # Get the maximum ID for each hamlet
+    max_ids <- df %>%
+      mutate(code = substr(hhid, 1, 3)) %>%
+      arrange(hhid) %>%
+      group_by(code) %>%
+      summarise(max_id = dplyr::last(hhid))
+    # For each row, get the new ones
+    out_list <- list()
+    for(i in 1:nrow(max_ids)){
+      this_max_id <- max_ids$max_id[i]
+      max_number <- as.numeric(substr(this_max_id, 5,7))
+      this_code <- max_ids$code[i]
+      new_ids <- (max_number + 1):(max_number + add_ids)
+      out_df <- tibble(hhid = paste0(this_code, '-', new_ids))
+      out_list[[i]] <- out_df
+    }
+    new_df <- bind_rows(out_list)
+    # Join to empty columns
+    right <- df[0,]
+    for(j in 1:ncol(right)){
+      this_column_name <- names(right)[j]
+      if(!this_column_name %in% c('hhid', 'District', 'Ward', 'Village', 'Hamlet')){
+        new_df[,this_column_name] <- NA
+      }
+    }
+    # Get geographic information
+    new_df <- left_join(
+      new_df %>% mutate(code = substr(hhid, 1, 3)),
+      bohemia::locations %>% dplyr::select(code, District, Ward, Village, Hamlet) 
+    ) %>%
+      dplyr::select(-code)
+    # Add all together
+    df <- bind_rows(
+      df, 
+      new_df
+    ) %>%
+      arrange(hhid)
+  }
+  
   # Add row number
   df$number <- 1:nrow(df)
   
@@ -175,6 +219,7 @@ list_generation_visit_control <- function(census_data,
   
   # Add observations
   df$observations <- ' '
+  
   
   if(html){
     names(df) <- toupper(names(df))
