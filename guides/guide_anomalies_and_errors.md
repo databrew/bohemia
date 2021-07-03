@@ -1,5 +1,8 @@
 # Anomalies and errors
 
+
+# Minicensus
+
 ## Overview
 
 The Bohemia data pipeline consists of a semi-structured "data cleaning" process wherein anomalies and errors are automatically identified and data managers provide "resolutions" in a semi-structured format via web app. This document describes the process.
@@ -194,3 +197,35 @@ The error message will contain text indicating the cause of the error. The data 
 **Important**: If a data manager receives an error message after uploading, it means that NONE of the uploaded data has been entered into the database. The spreadsheet must be corrected and then re-uploaded.
 
 Upon uploading correctly formatted, non-duplicated, non-empty data, a message will be displayed saying "SUCCESS! Successfully uploaded corrections requests." At this point, the process is finished.
+
+
+# Full census
+
+## Context and differentiation with above
+
+The prior section applies to the minicensus, which used the ODK Aggregate/Collect software suite for capturing and storing data. This section refers to the "full census" (henceforth simply called "census") which uses the ODK-X suite. The ODK-X suite is both (a) decentralized and (b) longitudinal in nature, meaning that changes to data are tracked and that fieldworkers and data managers can modify data directly.
+
+
+## Technical details
+
+Data is collected on tablets by fieldworkers. Data is synchronized with a server ("ODK-X Cloud Endpoint"). Synchronization is bi-directional meaning that both (a) the data from the tablet is sent to the server and (b) the data from the server (collected via others' tablets) is sent to the tablet.
+
+Modifications are tracked. For example, a row in the central database consist of `name`="John Doe" and `age`="335". When the (incorrect) age of 335 is modified to be 35, both (a) the change itself and (b) the date of the modification are logged. The resultant database has multiple rows for person "John Doe", with the last row reflecting the best known/current status on him, and prior rows reflecting the log of changes.
+
+## Process for detection of anomalies and errors and implementation of changes
+
+Unlike in the minicensus, where both (a) the detection of anomalies and errors as well as (b) their resolution was centralized through a web application, the longitudinal nature of ODK-X allows for a decentralized approach for the latter. That is, (a) the detection of anomalies and errors can be centralized (ie, scripts that process all data in one place), but (b) the implementation of errors can be decentralized (ie, each site can implement his/her own changes).
+
+### Anomaly error detection process
+
+- Data is submitted to the ODK-X cloud endpoint on a daily basis.  - A script ingests data from that endpoint and runs that data through a [series of automated anomaly checks](https://docs.google.com/spreadsheets/d/1bdKkfCVauX88fS8T4jRWL1OtbuPEOw7LfrVk1fj7D6k/edit?usp=sharing) on a daily basis.  
+- The results of that script (ie, a list of anomalies and potential errors) is compiled automatically into a tabular report.  
+- That report is emailed to local data managers.
+
+### Error corrections process
+
+- (THIS SECTION REQUIRES SPONSOR/SITE GUIDANCE/INPUT)
+- Data managers receive the daily list of anomalies (above).  
+- For those anomalies which have already been confirmed as non-errors (ie, "yes, that house really did have 15 children"), the data manager can submit a "is ok" signal with the corresponding anomaly ID to Databrew, and that specific anomaly will be hidden from future reports.  
+- For other anomalies, the data manager directs fieldworkers to investigate.  
+- In the case of anomaly being found to be an error, the **fieldworker/data manager** implements the change on the tablet.  
