@@ -1,5 +1,5 @@
 # Define the country
-country <- 'Mozambique'
+country <- 'Tanzania'
 if(country == 'Mozambique'){
   iso <- 'MOZ'
 } else {
@@ -102,32 +102,32 @@ get_data_briefcase <- function(url,
   setwd(owd)
 }
 
-# Get refusals, etc.
-ids <- c('refusalsabsences', 'enumerationscensus', 'va153census', 'passivemalariasurveillancemoz')
-for(i in 1:length(ids)){
-  id <- ids[i]
-  get_data_briefcase(
-    url = url,
-    id = id,
-    user = user,
-    password = password,
-    briefcase_dir = briefcase_dir,
-    briefcase_storage_dir = briefcase_storage_dir,
-    jar_file_briefcase = jar_file_briefcase,
-    dry_run = FALSE
-  )
-}
-
-# Read in all tables for ODK Aggregate
-# (eventually will need to adjust for repeats)
-agg_list <- list()
-for(i in 1:length(ids)){
-  this_id <- ids[i]
-  this_path <- paste0(file.path(briefcase_storage_dir, this_id), '.csv')
-  this_data <- read_csv(this_path)
-  agg_list[[i]] <- this_data
-}
-names(agg_list) <- ids
+# # Get refusals, etc.
+# ids <- c('refusalsabsences', 'enumerationscensus', 'va153census', 'passivemalariasurveillancemoz')
+# for(i in 1:length(ids)){
+#   id <- ids[i]
+#   get_data_briefcase(
+#     url = url,
+#     id = id,
+#     user = user,
+#     password = password,
+#     briefcase_dir = briefcase_dir,
+#     briefcase_storage_dir = briefcase_storage_dir,
+#     jar_file_briefcase = jar_file_briefcase,
+#     dry_run = FALSE
+#   )
+# }
+# 
+# # Read in all tables for ODK Aggregate
+# # (eventually will need to adjust for repeats)
+# agg_list <- list()
+# for(i in 1:length(ids)){
+#   this_id <- ids[i]
+#   this_path <- paste0(file.path(briefcase_storage_dir, this_id), '.csv')
+#   this_data <- read_csv(this_path)
+#   agg_list[[i]] <- this_data
+# }
+# names(agg_list) <- ids
 
 
 
@@ -177,34 +177,34 @@ names(data_list) <- table_names
 #     keyfile = keyfile_public)
 
 
-# Put the objects into S3
-temp_dir <- tempdir()
-
-# ODK-X
-file_name <- paste0('census_', country, '_',
-                    as.character(as.character(Sys.time())),
-                    '.RData')
-full_path <- file.path(temp_dir, file_name)
-save(data_list, file = full_path)
-put_object(
-  file = full_path,
-  object = file_name,
-  bucket = "bohemiacensus"
-)
-
-# ODK AGG
-file_name <- paste0('agg_', country, '_',
-                    as.character(as.character(Sys.time())),
-                    '.RData')
-full_path <- file.path(temp_dir, file_name)
-save(agg_list, file = full_path)
-put_object(
-  file = full_path,
-  object = file_name,
-  bucket = "bohemiacensus"
-)
-
-buck <- get_bucket(bucket = 'bohemiacensus')
-message(length(buck), ' objects in the bucket')
+# # Put the objects into S3
+# temp_dir <- tempdir()
+# 
+# # ODK-X
+# file_name <- paste0('census_', country, '_',
+#                     as.character(as.character(Sys.time())),
+#                     '.RData')
+# full_path <- file.path(temp_dir, file_name)
+# save(data_list, file = full_path)
+# put_object(
+#   file = full_path,
+#   object = file_name,
+#   bucket = "bohemiacensus"
+# )
+# 
+# # ODK AGG
+# file_name <- paste0('agg_', country, '_',
+#                     as.character(as.character(Sys.time())),
+#                     '.RData')
+# full_path <- file.path(temp_dir, file_name)
+# save(agg_list, file = full_path)
+# put_object(
+#   file = full_path,
+#   object = file_name,
+#   bucket = "bohemiacensus"
+# )
+# 
+# buck <- get_bucket(bucket = 'bohemiacensus')
+# message(length(buck), ' objects in the bucket')
 
 
