@@ -66,9 +66,9 @@ random_date <- function(n = 10000){
 # Function for cause of death choices
 cod_choices <- function(country){
   if(country == 'Mozambique'){
-    icd_data <- read.csv('../icd_10_moz.csv')
+    icd_data <- vatool::icd_data_moz
   } else {
-    icd_data <- read.csv('../icd_10_tz.csv')
+    icd_data <- vatool::icd_data_tza
   }
   icd_codes <- icd_data$icd_codes
   icd_names <- icd_data$icd_names
@@ -81,9 +81,9 @@ cod_choices <- function(country){
 # create data to match codes and names
 cod_data <- function(country){
   if(country == 'Mozambique'){
-    icd_data <- read.csv('../icd_10_moz.csv')
+    icd_data <- vatool::icd_data_moz
   } else {
-    icd_data <- read.csv('../icd_10_tz.csv')
+    icd_data <- vatool::icd_data_tza
   }
   icd_codes <- icd_data$icd_codes
   icd_names <- icd_data$icd_names
