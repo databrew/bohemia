@@ -133,6 +133,11 @@ app_server <- function(input, output, session) {
   is_aws <- grepl('aws', tolower(Sys.info()['release']))
   is_local <- ifelse(is_aws, FALSE, TRUE)
   # is_local <- FALSE
+  if(is_local){
+    message('Running with the local datbase---------------------')
+  } else {
+    messgae('Running with the remote AWS database---------------')
+  }
   
   logged_in <- reactiveVal(value = FALSE)
   submission_success <- reactiveVal(value = NULL)
@@ -281,7 +286,7 @@ app_server <- function(input, output, session) {
                  div(class = "tableCard",
                      selectInput('adj_death_id', 'Select the VA ID', choices = sort(unique(death_id_choices))),
                      selectInput('adj_cods', 'Select underlying cause of death',  choices = c('', sort(unique(names(cods_choices))))),
-                     textInput(inputId = 'adj_phy_notes', label = 'Enter additional notes on cause of death', value = NULL),
+                     textAreaInput(inputId = 'adj_phy_notes', label = 'Enter additional notes on cause of death', value = NULL),
                      actionButton('adj_submit_cod', 'Submit cause of death and notes'),
                      uiOutput('ui_submission_adj')
                  )
