@@ -386,6 +386,7 @@ app_server <- function(input, output, session) {
     ok <- FALSE
     message('cn is ', cn)
     message('li is ', li)
+    message(nchar(cn))
     if(li){
       if(!is.null(cn)){
         if(nchar(cn) > 0){
