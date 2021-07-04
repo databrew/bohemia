@@ -155,8 +155,8 @@ generate_data_dictionary <- function(path, language = 'English', include_variabl
             ifelse(the_choice_levels == the_choices,
                    the_choice_levels,
                    paste0(the_choice_levels, 
-                          ' (',
-                          the_choices, ')'))
+                          ' [[',
+                          the_choices, ']]'))
         } 
         # the_choices <- paste0(the_choices, collapse = ' | ')
         
