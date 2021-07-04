@@ -11,8 +11,7 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 
 ## Installation
 
-To install from github,
-    run:
+To install from github, run:
 
     devtools::install_github('databrew/bohemia', subdir = 'rpackage/bohemia')
 
@@ -22,12 +21,18 @@ Save a `credentials/credentials.yaml` in `dev`.
 
 Save a `credentials/vatoolusers.csv` in `dev`.
 
+## Setting up ICD-10 codes
+
+Run `create_data.R` in `data-raw`. This will create two r data objects
+named `icd_data_moz` and `icd_data_tza`.
+
 ## Setting up back-end
 
 You’ll need to set up a back-end. In order to this, create a postgres
 database named `bohemia`:
 
     psql
+    drop database vadb;   
     create database vadb;
     exit
 
@@ -50,14 +55,14 @@ To run locally, run:
 
 ## Deploying database to AWS
 
-  - console.aws.amazon.com/rds/
-  - Click “Create database”
-  - Click “PostgreSQL 12.5-R1”
-  - Click “Production”
-  - Set db cluster identifier to “vatool”
-  - Set password
-  - Set instance class to db.t3.micro
-  - Set default vpc
-  - Make public
-  - For security, use bohemiadbgroup
-  - Set initial database name to “vatool”
+-   console.aws.amazon.com/rds/
+-   Click “Create database”
+-   Click “PostgreSQL 12.5-R1”
+-   Click “Production”
+-   Set db cluster identifier to “vatool”
+-   Set password
+-   Set instance class to db.t3.micro
+-   Set default vpc
+-   Make public
+-   For security, use bohemiadbgroup
+-   Set initial database name to “vatool”
