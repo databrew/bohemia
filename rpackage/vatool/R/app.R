@@ -190,34 +190,32 @@ app_server <- function(input, output, session) {
   })
   
   # Summary table 1
-  output$summary_1 <- DT::renderDataTable({
-    li <- logged_in()
-    out <- NULL
-    if(li){
-      
-    } 
-    if(!is.null(out)){
-      if(is.data.frame(out)){
-        
-        databrew::prettify(out, nrows = nrow(out))
-      }
-    }
-  })
-  
-  # Summary table 2
-  output$summary_2 <- DT::renderDataTable({
-    li <- logged_in()
-    out <- NULL
-    if(li){
-      
-    } 
-    if(!is.null(out)){
-      if(is.data.frame(out)){
-        
-        databrew::prettify(out, nrows = nrow(out))
-      }
-    }
-  })
+  # output$summary_1 <- DT::renderDataTable({
+  #   li <- logged_in()
+  #   out <- NULL
+  #   if(li){
+  #     
+  #   } 
+  #   if(!is.null(out)){
+  #     if(is.data.frame(out)){
+  #       databrew::prettify(out, nrows = nrow(out))
+  #     }
+  #   }
+  # })
+  # 
+  # # Summary table 2
+  # output$summary_2 <- DT::renderDataTable({
+  #   li <- logged_in()
+  #   out <- NULL
+  #   if(li){
+  #     
+  #   } 
+  #   if(!is.null(out)){
+  #     if(is.data.frame(out)){
+  #       databrew::prettify(out, nrows = nrow(out))
+  #     }
+  #   }
+  # })
  
   # Selection input for VA ID
   output$ui_adjudicate <- renderUI({
@@ -225,6 +223,7 @@ app_server <- function(input, output, session) {
     uu <- !is.null(users)
     li <- li & uu
     if(li){
+      cn <- input$country
       liu <- input$log_in_user
       message('at point 3')
       # user_role <- users %>% dplyr::filter(username == tolower(liu)) %>% .$role
@@ -243,7 +242,7 @@ app_server <- function(input, output, session) {
         death_id_choices <- unique(cod$death_id[duplicated(cod$death_id)])
 
        
-        cods_choices <- cod_choices()
+        cods_choices <- cod_choices(country = cn)
 
         fluidPage(
           fluidRow(
@@ -282,11 +281,17 @@ app_server <- function(input, output, session) {
   # table showing 
   output$adj_table_1 <- DT::renderDataTable({
     li <- logged_in()
+    cn <- input$country
     out <- data_frame(' ' = 'No VAs to adjudicate')
     if(li){
       idi <- input$adj_death_id
       if(!is.null(idi) & idi != ''){
-        pd <- data$va
+        pd <- data$va 
+        if(cn == 'Mozambique'){
+          pd <- pd %>% filter(grepl('manhica', server))
+        } else {
+          pd <- pd %>% filter(grepl('ihi', server))
+        }
         person <- pd %>% filter(death_id == idi)
         person <- get_va_names(person)
         # remove columns with NA
@@ -299,7 +304,6 @@ app_server <- function(input, output, session) {
         
         out <- as.data.frame(t(person))
         out$Question <- rownames(out)
-        # save(out, file = 'out.rda')
         names(out) <- c('Answer', 'Question')
         rownames(out) <- NULL
         out <- out[, c('Question', 'Answer')]
@@ -342,18 +346,33 @@ app_server <- function(input, output, session) {
       liu <- input$log_in_user
       li_text <- paste0('Welcome ', liu)
       p(li_text)
+      
+      fluidRow(
+        selectInput(inputId = 'country',
+                    label = 'Choose country',
+                    choices = c('Mozambique', 'Tanzania'),
+                    selected = 'Mozambiuqe')
+      )
     } else if (lif){
       p('Username or password incorrect')
     } else {
       p('Not logged in')
     }
+    
+  
   })
   
   # Selection input for VA ID
   output$ui_select_va <- renderUI({
     li <- logged_in()
-    if(li){
+    cn <- input$country
+    if(li & !is.null(cn)){
       pd <- data$va
+      if(cn == 'Mozambique'){
+        pd <- pd %>% filter(grepl('manhica', server))
+      } else {
+        pd <- pd %>% filter(grepl('ihi', server))
+      }
       liu <- input$log_in_user
       user <- users %>% dplyr::filter(username == tolower(liu))
       userid <- user %>% dplyr::filter(username == tolower(liu)) %>% .$user_id
@@ -376,7 +395,8 @@ app_server <- function(input, output, session) {
   output$ui_assign_cod <- renderUI({
     li <- logged_in()
     if(li){
-      choices <- cod_choices()
+      cn <- input$country
+      choices <- cod_choices(country = cn)
       fluidPage(
         fluidRow(
           selectInput('cod_1', 'Select immediate cause of death', choices =c('', sort(unique(names(choices)))) , selected = ''),
@@ -398,11 +418,15 @@ app_server <- function(input, output, session) {
     li <- logged_in()
     out <- NULL
     if(li){
+      cn <- input$country
       idi <- input$death_id
-      if(!is.null(idi)){
+      if(!is.null(idi) & !is.null(cn)){
         pd <- data$va
-        save(pd, file = 'temp_va.rda')
-        
+        if(cn == 'Mozambique'){
+          pd <- pd %>% filter(grepl('manhica', server))
+        } else {
+          pd <- pd %>% filter(grepl('ihi', server))
+        }
         person <- pd %>% filter(death_id == idi)
         person <- get_va_names(person)
         # remove columns with NA
@@ -416,6 +440,8 @@ app_server <- function(input, output, session) {
         person <- person[,apply(person, 2, function(x) x != 'no')]
         out <- as.data.frame(t(person))
         out$Question <- rownames(out)
+        # message(nrow(out))
+        
         names(out) <- c('Answer', 'Question')
         rownames(out) <- NULL
         out <- out[, c('Question', 'Answer')]
@@ -427,7 +453,6 @@ app_server <- function(input, output, session) {
     } 
     if(!is.null(out)){
       if(is.data.frame(out)){
-        
         databrew::prettify(out, nrows = nrow(out))
       }
     }
@@ -465,7 +490,8 @@ app_server <- function(input, output, session) {
   
   # Observe submission of cause of death and save
   observeEvent(input$submit_cod, {
-    cod_names <- cod_data()
+    cn <- input$country
+    cod_names <- cod_data(country = cn)
     cod_data <- data$cod
     cod_1 = input$cod_1
     cod_2 = input$cod_2
@@ -545,7 +571,8 @@ app_server <- function(input, output, session) {
   # Adjudicator submissions
   # Observe submission of cause of death and save
   observeEvent(input$adj_submit_cod, {
-    cod_names <- cod_data()
+    cn <- input$country
+    cod_names <- cod_data(country = cn)
     cod_data <- data$cod
     cod_1 = input$adj_cods
     # condition if underlying cause of death is not fiilled out, wont submit
