@@ -190,32 +190,32 @@ app_server <- function(input, output, session) {
   })
   
   # Summary table 1
-  # output$summary_1 <- DT::renderDataTable({
-  #   li <- logged_in()
-  #   out <- NULL
-  #   if(li){
-  #     
-  #   } 
-  #   if(!is.null(out)){
-  #     if(is.data.frame(out)){
-  #       databrew::prettify(out, nrows = nrow(out))
-  #     }
-  #   }
-  # })
-  # 
+  output$summary_1 <- DT::renderDataTable({
+    li <- logged_in()
+    out <- NULL
+    if(li){
+      save(users, file = 'temp_users.rda')
+    }
+    if(!is.null(out)){
+      if(is.data.frame(out)){
+        databrew::prettify(out, nrows = nrow(out))
+      }
+    }
+  })
+  
   # # Summary table 2
-  # output$summary_2 <- DT::renderDataTable({
-  #   li <- logged_in()
-  #   out <- NULL
-  #   if(li){
-  #     
-  #   } 
-  #   if(!is.null(out)){
-  #     if(is.data.frame(out)){
-  #       databrew::prettify(out, nrows = nrow(out))
-  #     }
-  #   }
-  # })
+  output$summary_2 <- DT::renderDataTable({
+    li <- logged_in()
+    out <- NULL
+    if(li){
+    
+    }
+    if(!is.null(out)){
+      if(is.data.frame(out)){
+        databrew::prettify(out, nrows = nrow(out))
+      }
+    }
+  })
  
   # Selection input for VA ID
   output$ui_adjudicate <- renderUI({
