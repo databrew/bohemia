@@ -386,7 +386,6 @@ app_server <- function(input, output, session) {
     ok <- FALSE
     message('cn is ', cn)
     message('li is ', li)
-    message(nchar(cn))
     if(li){
       if(!is.null(cn)){
         if(nchar(cn) > 0){
@@ -419,8 +418,7 @@ app_server <- function(input, output, session) {
     } else {
       NULL
     }
-    message('done with ui_select_va')
-    
+
   })
   
   output$ui_assign_cod <- renderUI({
