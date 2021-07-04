@@ -103,8 +103,11 @@ app_ui <- function(request) {
           tabItem(
             tabName = 'summary',
             fluidRow(
-              dataTableOutput('summary_1'),
-              dataTableOutput('summary_2')
+              div(class = "tableCard",
+              DT::dataTableOutput('summary_1')),
+              br(), br(),
+              div(class = "tableCard",
+              DT::dataTableOutput('summary_2'))
             )
           ),
           tabItem(
@@ -190,33 +193,46 @@ app_server <- function(input, output, session) {
   })
   
   # # Summary table 1
-  # output$summary_1 <- DT::renderDataTable({
-  #   li <- logged_in()
-  #   out <- NULL
-  #   if(li){
-  #     save(users, file = 'temp_users.rda')
-  #   }
-  #   if(!is.null(out)){
-  #     if(is.data.frame(out)){
-  #       databrew::prettify(out, nrows = nrow(out))
-  #     }
-  #   }
-  # })
-  # 
-  # # # Summary table 2
-  # output$summary_2 <- DT::renderDataTable({
-  #   li <- logged_in()
-  #   out <- NULL
-  #   if(li){
-  #   
-  #   }
-  #   if(!is.null(out)){
-  #     if(is.data.frame(out)){
-  #       databrew::prettify(out, nrows = nrow(out))
-  #     }
-  #   }
-  # })
- 
+  output$summary_1 <- DT::renderDataTable({
+    li <- logged_in()
+    out <- NULL
+    if(li){
+      # join users and cods
+      out <- left_join(users, cods) %>%
+        group_by(`Last name` = last_name) %>%
+        summarise(`Number of VAs coded` = length(which(!is.na(time_stamp))))
+
+    }
+    if(!is.null(out)){
+      if(is.data.frame(out)){
+        out
+      }
+    }
+  })
+
+  # # Summary table 2
+  output$summary_2 <- DT::renderDataTable({
+    li <- logged_in()
+    out <- NULL
+    if(li){
+      pd <- data$va
+      pd <- pd %>% group_by(country = server) %>%
+        summarise(`Total VAs` = n()) %>%
+        mutate(country = ifelse(grepl('ihi', country), 'Tanzania', 'Mozambique'))
+
+      out <- left_join(users, cods) %>%
+        group_by(country) %>%
+        summarise(`Number of VAs coded` = length(which(!is.na(time_stamp)))) %>% 
+        inner_join(pd)
+
+    }
+    if(!is.null(out)){
+      if(is.data.frame(out)){
+        out
+      }
+    }
+  })
+
   # Selection input for VA ID
   output$ui_adjudicate <- renderUI({
     li <- logged_in()
