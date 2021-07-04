@@ -33,6 +33,9 @@ app_ui <- function(request) {
             text="Adjudicate",
             tabName="adjudicate"),
           menuItem(
+            text="Summary",
+            tabName="summary"),
+          menuItem(
             text = 'About',
             tabName = 'about')
         )),
@@ -95,6 +98,13 @@ app_ui <- function(request) {
             tabName = 'adjudicate',
             fluidRow(
               uiOutput('ui_adjudicate')
+            )
+          ),
+          tabItem(
+            tabName = 'summary',
+            fluidRow(
+              dataTableOutput('summary_1'),
+              dataTableOutput('summary_2')
             )
           ),
           tabItem(
@@ -178,7 +188,37 @@ app_server <- function(input, output, session) {
     }
     
   })
-
+  
+  # Summary table 1
+  output$summary_1 <- DT::renderDataTable({
+    li <- logged_in()
+    out <- NULL
+    if(li){
+      
+    } 
+    if(!is.null(out)){
+      if(is.data.frame(out)){
+        
+        databrew::prettify(out, nrows = nrow(out))
+      }
+    }
+  })
+  
+  # Summary table 2
+  output$summary_2 <- DT::renderDataTable({
+    li <- logged_in()
+    out <- NULL
+    if(li){
+      
+    } 
+    if(!is.null(out)){
+      if(is.data.frame(out)){
+        
+        databrew::prettify(out, nrows = nrow(out))
+      }
+    }
+  })
+ 
   # Selection input for VA ID
   output$ui_adjudicate <- renderUI({
     li <- logged_in()
@@ -226,8 +266,8 @@ app_server <- function(input, output, session) {
                    div(class = "tableCard",
                      selectInput('adj_death_id', 'Select the VA ID', choices = sort(unique(death_id_choices))),
                      selectInput('adj_cods', 'Select underlying cause of death',  choices = c('', sort(unique(names(cods_choices))))),
-                     br(),
-                     actionButton('adj_submit_cod', 'Cause of death'),
+                     textInput(inputId = 'adj_phy_notes', label = 'Enter additional notes on cause of death', value = NULL),
+                     actionButton('adj_submit_cod', 'Submit cause of death and notes'),
                      uiOutput('ui_submission_adj')
                      )
                    )
@@ -251,9 +291,9 @@ app_server <- function(input, output, session) {
         person <- get_va_names(person)
         # remove columns with NA
         person <- person[ , apply(person, 2, function(x) !any(is.na(x)))] 
-        # remove other columns 
-        # remove other columns 
-        remove_these <- "write your 3 digit|Id10007|server|first or given|the surname|name of VA|1	Manually write your 3 digit worker ID here|tz001|this_usernameTake a picture of the painted Household ID|isadult1|isadult2|isneonatal|isneonatal2|ischild1|ischild2|instancename|instance_id|device_id|end_time|start_time|todays_date|wid|Do you have a QR code with your worker ID?|wid|ageindays|ageindaysneonate|ageinmonths|ageinmonthsbyyear|ageinmonthsremain|ageinyears2|ageinyearsremain|The GPS coordinates represents|Collect the GPS coordinates of this location|Does the house you're at have a painted ID number on it?|hh_id|Write the 6 digit household ID here"
+        # remove other columns
+        remove_these <- "write your 3 digit|Id10007|server|first or given|the surname|name of VA|1	Manually write your 3 digit worker ID here|tz001|this_usernameTake a picture of the painted Household ID|isadult1|isadult2|isneonatal|isneonatal2|ischild1|ischild2|instancename|instance_id|device_id|end_time|start_time|todays_date|wid|Do you have a QR code with your worker ID?|wid|ageindays|ageindaysneonate|ageinmonths|ageinmonthsbyyear|ageinmonthsremain|ageinyears2|ageinyearsremain|The GPS coordinates represents|Collect the GPS coordinates of this location|Does the house you're at have a painted ID number on it?|hh_id|Write the 6 digit household ID here|Id10007|Id10008|Id10009|Id10010|Id10010a| Id10010b|Id10011|Id10013|Id10017|Id10018|Id10018d|Id10020|Id10022|Id10023|Id10052|Id10053|Id10057|Id10061|Id10062|Id10069"
+
         person <- person[, !grepl(remove_these, names(person))]
         person <- person[,apply(person, 2, function(x) x != 'no')]
         
@@ -263,10 +303,7 @@ app_server <- function(input, output, session) {
         names(out) <- c('Answer', 'Question')
         rownames(out) <- NULL
         out <- out[, c('Question', 'Answer')]
-        # out <- out[which(nchar(as.character(out$Answer)) < 700),]
-        # out <- 
-        #   tibble(Variable = names(person),
-        #          Response = person[1,])
+       
       }
     } 
     out
@@ -346,8 +383,9 @@ app_server <- function(input, output, session) {
           selectInput('cod_2', 'Select intermediary cause of death', choices =c('', sort(unique(names(choices)))), selected = ''),
           selectInput('cod_3', 'Select underlying cause of death', choices =c('', sort(unique(names(choices)))), selected = '')
         ),
+        textInput(inputId = 'phy_notes', label = 'Enter additional notes on cause of death', value = NULL),
         fluidRow(
-          actionButton('submit_cod', 'Submit cause of death')
+          actionButton('submit_cod', 'Submit causes of death and notes')
         )
       )
     } else {
@@ -363,13 +401,16 @@ app_server <- function(input, output, session) {
       idi <- input$death_id
       if(!is.null(idi)){
         pd <- data$va
+        save(pd, file = 'temp_va.rda')
+        
         person <- pd %>% filter(death_id == idi)
         person <- get_va_names(person)
         # remove columns with NA
         person <- person[ , apply(person, 2, function(x) !any(is.na(x)))]
-      
+        
+
         # remove other columns 
-        remove_these <- "write your 3 digit|Id10007|server|first or given|the surname|name of VA|1	Manually write your 3 digit worker ID here|tz001|this_usernameTake a picture of the painted Household ID|isadult1|isadult2|isneonatal|isneonatal2|ischild1|ischild2|instancename|instance_id|device_id|end_time|start_time|todays_date|wid|Do you have a QR code with your worker ID?|wid|ageindays|ageindaysneonate|ageinmonths|ageinmonthsbyyear|ageinmonthsremain|ageinyears2|ageinyearsremain|The GPS coordinates represents|Collect the GPS coordinates of this location|Does the house you're at have a painted ID number on it?|hh_id|Write the 6 digit household ID here"
+        remove_these <- "write your 3 digit|Id10007|server|first or given|the surname|name of VA|1	Manually write your 3 digit worker ID here|tz001|this_usernameTake a picture of the painted Household ID|isadult1|isadult2|isneonatal|isneonatal2|ischild1|ischild2|instancename|instance_id|device_id|end_time|start_time|todays_date|wid|Do you have a QR code with your worker ID?|wid|ageindays|ageindaysneonate|ageinmonths|ageinmonthsbyyear|ageinmonthsremain|ageinyears2|ageinyearsremain|The GPS coordinates represents|Collect the GPS coordinates of this location|Does the house you're at have a painted ID number on it?|hh_id|Write the 6 digit household ID here|Id10007|Id10008|Id10009|Id10010|Id10010a| Id10010b|Id10011|Id10013|Id10017|Id10018|Id10018d|Id10020|Id10022|Id10023|Id10052|Id10053|Id10057|Id10061|Id10062|Id10069"
         
         person <- person[, !grepl(remove_these, names(person))]
         person <- person[,apply(person, 2, function(x) x != 'no')]
