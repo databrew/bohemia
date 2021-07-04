@@ -1,11 +1,4 @@
----
-title: "hh_qr_code"
-output:
-  html_document:
-    df_print: paged
----
 
-```{r}
 library(magick)
 library(bohemia)
 library(qrcode)
@@ -16,15 +9,16 @@ library(gsheet)
 country <- 'Tanzania'
 
 # Read in minicensus data
-if('minicensus_data.RData' %in% dir()){
-  load('minicensus_data.RData')
+file_name <- paste0('minicensus_data_', country, '.RData')
+if(file_name %in% dir()){
+  load(file_name)
 } else {
   minicensus_data <- load_odk_data(the_country = country,
-                          credentials_path = '../../credentials/credentials.yaml', # request from Databrew
-                          users_path = '../../credentials/users.yaml', # request from Databrew
-                          efficient = FALSE)
+                                   credentials_path = '../../credentials/credentials.yaml', # request from Databrew
+                                   users_path = '../../credentials/users.yaml', # request from Databrew
+                                   efficient = FALSE)
   save(minicensus_data,
-       file = 'minicensus_data.RData')
+       file = file_name)
 }
 
 codes <- sort(unique(minicensus_data$minicensus_main$hh_id))
@@ -39,15 +33,15 @@ for(i in 1:length(codes)){
   message(i)
   this_code <- codes[i]
   out_name <- paste0(
-      'certificates_simple/',
-      this_code,
-      '.pdf'
-    )
+    'certificates_simple/',
+    this_code,
+    '.pdf'
+  )
   if(!file.exists(out_name)){
-        hh_qr_code_print_simple(hh_id = this_code,
-                     save_file = out_name,
-                     height=3.5,
-                     width=3)
+    hh_qr_code_print_simple(hh_id = this_code,
+                            save_file = out_name,
+                            height=3.5,
+                            width=3)
     dev.off()
   }  
 }
@@ -77,15 +71,15 @@ for(i in 1:length(codes)){
   message(i)
   this_code <- codes[i]
   out_name <- paste0(
-      'certificates_simple/',
-      this_code,
-      '.pdf'
-    )
+    'certificates_simple/',
+    this_code,
+    '.pdf'
+  )
   if(!file.exists(out_name)){
-        hh_qr_code_print_simple(hh_id = this_code,
-                     save_file = out_name,
-                     height=3.5,
-                     width=3)
+    hh_qr_code_print_simple(hh_id = this_code,
+                            save_file = out_name,
+                            height=3.5,
+                            width=3)
     dev.off()
   }  
 }
@@ -122,4 +116,3 @@ system('pdftk *.pdf cat output all.pdf')
 setwd('..')
 setwd('..')
 
-```
