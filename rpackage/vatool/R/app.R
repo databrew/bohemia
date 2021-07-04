@@ -15,10 +15,10 @@
 #' @import dplyr
 app_ui <- function(request) {
   options(scipen = '999')
-
+  
   tagList(
     mobile_golem_add_external_resources(),
-
+    
     dashboardPage(
       dashboardHeader (title = "Bohemia VA tool", uiOutput('top_button')),
       dashboardSidebar(
@@ -52,27 +52,27 @@ app_ui <- function(request) {
                 column(12, 
                        # uiOutput('top_button'),
                        # br(),
-                         div(class = 'tableCard',
-                          uiOutput('ui_main', inline = TRUE)
-                         )
+                       div(class = 'tableCard',
+                           uiOutput('ui_main', inline = TRUE)
                        )
+                )
               ),
               br(),
               fluidRow(
                 column(8,
                        div(class = 'tableCard',
                            h1('VA form'),
-                        DT::dataTableOutput('va_table')
+                           DT::dataTableOutput('va_table')
                        )
-                       ),
+                ),
                 column(4,
                        div(class = 'tableCard',
                            h3('Physician inputs'),
-                         uiOutput('ui_select_va'),
-                         uiOutput('ui_assign_cod'),
-                         uiOutput('ui_submission')
-                          )
+                           uiOutput('ui_select_va'),
+                           uiOutput('ui_assign_cod'),
+                           uiOutput('ui_submission')
                        )
+                )
               )
             )
           ),
@@ -82,16 +82,16 @@ app_ui <- function(request) {
               column(12,
                      h2('Adjudicator info'),
                      div(class = 'tableCard',
-                       DT::dataTableOutput('user_table')
+                         DT::dataTableOutput('user_table')
                      ),
                      
                      br(),
                      
                      h2('Submission history'),
                      div(class = 'tableCard',
-                      DT::dataTableOutput('history_table')
+                         DT::dataTableOutput('history_table')
                      )
-                    )
+              )
             )
           ),
           tabItem(
@@ -104,10 +104,10 @@ app_ui <- function(request) {
             tabName = 'summary',
             fluidRow(
               div(class = "tableCard",
-              DT::dataTableOutput('summary_1')),
+                  DT::dataTableOutput('summary_1')),
               br(), br(),
               div(class = "tableCard",
-              DT::dataTableOutput('summary_2'))
+                  DT::dataTableOutput('summary_2'))
             )
           ),
           tabItem(
@@ -132,7 +132,7 @@ app_server <- function(input, output, session) {
   
   is_aws <- grepl('aws', tolower(Sys.info()['release']))
   is_local <- ifelse(is_aws, FALSE, TRUE)
-  is_local <- FALSE
+  # is_local <- FALSE
   
   logged_in <- reactiveVal(value = FALSE)
   submission_success <- reactiveVal(value = NULL)
@@ -166,11 +166,11 @@ app_server <- function(input, output, session) {
     if(ok){
       logged_in(TRUE)
       removeModal()
-
+      
       # load data
       data$va <- load_va_data(is_local = is_local)
       # data$va <- readRDS('~/Desktop/va_data.rda')
-
+      
       # print(head(data$va))
       # create table with same columns as session table in database (to append upon logout)
       print(users)
@@ -201,7 +201,7 @@ app_server <- function(input, output, session) {
       out <- left_join(users, cods) %>%
         group_by(`Last name` = last_name) %>%
         summarise(`Number of VAs coded` = length(which(!is.na(time_stamp))))
-
+      
     }
     if(!is.null(out)){
       if(is.data.frame(out)){
@@ -209,7 +209,7 @@ app_server <- function(input, output, session) {
       }
     }
   })
-
+  
   # # Summary table 2
   output$summary_2 <- DT::renderDataTable({
     li <- logged_in()
@@ -219,12 +219,12 @@ app_server <- function(input, output, session) {
       pd <- pd %>% group_by(country = server) %>%
         summarise(`Total VAs` = n()) %>%
         mutate(country = ifelse(grepl('ihi', country), 'Tanzania', 'Mozambique'))
-
+      
       out <- left_join(users, cods) %>%
         group_by(country) %>%
         summarise(`Number of VAs coded` = length(which(!is.na(time_stamp)))) %>% 
         inner_join(pd)
-
+      
     }
     if(!is.null(out)){
       if(is.data.frame(out)){
@@ -232,7 +232,7 @@ app_server <- function(input, output, session) {
       }
     }
   })
-
+  
   # Selection input for VA ID
   output$ui_adjudicate <- renderUI({
     li <- logged_in()
@@ -244,51 +244,51 @@ app_server <- function(input, output, session) {
       message('at point 3')
       # user_role <- users %>% dplyr::filter(username == tolower(liu)) %>% .$role
       
-     
-        # get ids that have more than one diagnosis
-        user <- users %>% dplyr::filter(username == tolower(liu))
-        userid <- user %>% dplyr::filter(username == tolower(liu)) %>% .$user_id
-        message('at point 3.5')
-        
-        # make sure user cant adjudicate a VA he already adjudicatd 
-        cods <- cods %>% filter(user_id != userid)
-        cod <- cods %>% 
-          group_by(death_id, cod_3) %>% 
-          summarise(counts = n())
-        death_id_choices <- unique(cod$death_id[duplicated(cod$death_id)])
-
-       
-        cods_choices <- cod_choices(country = cn)
-
-        fluidPage(
-          fluidRow(
-            column(12,
-                  h2('Causes of deaths from other physicians')
-            ),
-            column(9,
-
-                   div(class = "tableCard",
-                    DT::dataTableOutput('adj_table_2')
-                   ),
-                   h2('VA form'),
-                   div(class = "tableCard",
-                    DT::dataTableOutput('adj_table_1')
-                   )
-                   ),
-            column(3,
-                   # h2(' '),
-
-                   div(class = "tableCard",
+      
+      # get ids that have more than one diagnosis
+      user <- users %>% dplyr::filter(username == tolower(liu))
+      userid <- user %>% dplyr::filter(username == tolower(liu)) %>% .$user_id
+      message('at point 3.5')
+      
+      # make sure user cant adjudicate a VA he already adjudicatd 
+      cods <- cods %>% filter(user_id != userid)
+      cod <- cods %>% 
+        group_by(death_id, cod_3) %>% 
+        summarise(counts = n())
+      death_id_choices <- unique(cod$death_id[duplicated(cod$death_id)])
+      
+      
+      cods_choices <- cod_choices(country = cn)
+      
+      fluidPage(
+        fluidRow(
+          column(12,
+                 h2('Causes of deaths from other physicians')
+          ),
+          column(9,
+                 
+                 div(class = "tableCard",
+                     DT::dataTableOutput('adj_table_2')
+                 ),
+                 h2('VA form'),
+                 div(class = "tableCard",
+                     DT::dataTableOutput('adj_table_1')
+                 )
+          ),
+          column(3,
+                 # h2(' '),
+                 
+                 div(class = "tableCard",
                      selectInput('adj_death_id', 'Select the VA ID', choices = sort(unique(death_id_choices))),
                      selectInput('adj_cods', 'Select underlying cause of death',  choices = c('', sort(unique(names(cods_choices))))),
                      textInput(inputId = 'adj_phy_notes', label = 'Enter additional notes on cause of death', value = NULL),
                      actionButton('adj_submit_cod', 'Submit cause of death and notes'),
                      uiOutput('ui_submission_adj')
-                     )
-                   )
+                 )
           )
         )
-     
+      )
+      
     } else {
       NULL
     }
@@ -314,7 +314,7 @@ app_server <- function(input, output, session) {
         person <- person[ , apply(person, 2, function(x) !any(is.na(x)))] 
         # remove other columns
         remove_these <- "write your 3 digit|Id10007|server|first or given|the surname|name of VA|1	Manually write your 3 digit worker ID here|tz001|this_usernameTake a picture of the painted Household ID|isadult1|isadult2|isneonatal|isneonatal2|ischild1|ischild2|instancename|instance_id|device_id|end_time|start_time|todays_date|wid|Do you have a QR code with your worker ID?|wid|ageindays|ageindaysneonate|ageinmonths|ageinmonthsbyyear|ageinmonthsremain|ageinyears2|ageinyearsremain|The GPS coordinates represents|Collect the GPS coordinates of this location|Does the house you're at have a painted ID number on it?|hh_id|Write the 6 digit household ID here|Id10007|Id10008|Id10009|Id10010|Id10010a| Id10010b|Id10011|Id10013|Id10017|Id10018|Id10018d|Id10020|Id10022|Id10023|Id10052|Id10053|Id10057|Id10061|Id10062|Id10069"
-
+        
         person <- person[, !grepl(remove_these, names(person))]
         person <- person[,apply(person, 2, function(x) x != 'no')]
         
@@ -323,7 +323,7 @@ app_server <- function(input, output, session) {
         names(out) <- c('Answer', 'Question')
         rownames(out) <- NULL
         out <- out[, c('Question', 'Answer')]
-       
+        
       }
     } 
     out
@@ -367,7 +367,7 @@ app_server <- function(input, output, session) {
         selectInput(inputId = 'country',
                     label = 'Choose country',
                     choices = c('Mozambique', 'Tanzania'),
-                    selected = 'Mozambiuqe')
+                    selected = 'Mozambique')
       )
     } else if (lif){
       p('Username or password incorrect')
@@ -375,20 +375,32 @@ app_server <- function(input, output, session) {
       p('Not logged in')
     }
     
-  
+    
   })
   
   # Selection input for VA ID
   output$ui_select_va <- renderUI({
+    message('in ui_select_va')
     li <- logged_in()
     cn <- input$country
-    if(li & !is.null(cn)){
+    ok <- FALSE
+    message('cn is ', cn)
+    message('li is ', li)
+    if(li){
+      if(!is.null(cn)){
+        if(nchar(cn) > 0){
+          ok <- TRUE
+        }
+      }
+    }
+    if(ok){
       pd <- data$va
       if(cn == 'Mozambique'){
         pd <- pd %>% filter(grepl('manhica', server))
       } else {
         pd <- pd %>% filter(grepl('ihi', server))
       }
+      
       liu <- input$log_in_user
       user <- users %>% dplyr::filter(username == tolower(liu))
       userid <- user %>% dplyr::filter(username == tolower(liu)) %>% .$user_id
@@ -406,12 +418,23 @@ app_server <- function(input, output, session) {
     } else {
       NULL
     }
+    message('done with ui_select_va')
+    
   })
   
   output$ui_assign_cod <- renderUI({
     li <- logged_in()
+    cn <- input$country
+    ok <- FALSE
     if(li){
-      cn <- input$country
+      if(!is.null(cn)){
+        if(nchar(cn) > 0){
+          ok <- TRUE
+        }
+      }
+    }
+    if(ok){
+      message('about to run cod_choices')
       choices <- cod_choices(country = cn)
       fluidPage(
         fluidRow(
@@ -433,62 +456,71 @@ app_server <- function(input, output, session) {
   output$va_table <- DT::renderDataTable({
     li <- logged_in()
     out <- NULL
+    cn <- input$country
+    idi <- input$death_id
+    ok <- FALSE
+    message('va_table cn is ', cn)
+    message('va_table li is ', li)
     if(li){
-      cn <- input$country
-      idi <- input$death_id
-      if(!is.null(idi) & !is.null(cn)){
-        pd <- data$va
-        if(cn == 'Mozambique'){
-          pd <- pd %>% filter(grepl('manhica', server))
-        } else {
-          pd <- pd %>% filter(grepl('ihi', server))
+      if(!is.null(cn)){
+        if(nchar(cn) > 0){
+          if(!is.null(idi)){
+            ok <- TRUE
+          }
         }
-        person <- pd %>% filter(death_id == idi)
-        person <- get_va_names(person)
-        # remove columns with NA
-        person <- person[ , apply(person, 2, function(x) !any(is.na(x)))]
-        
-
-        # remove other columns 
-        remove_these <- "write your 3 digit|Id10007|server|first or given|the surname|name of VA|1	Manually write your 3 digit worker ID here|tz001|this_usernameTake a picture of the painted Household ID|isadult1|isadult2|isneonatal|isneonatal2|ischild1|ischild2|instancename|instance_id|device_id|end_time|start_time|todays_date|wid|Do you have a QR code with your worker ID?|wid|ageindays|ageindaysneonate|ageinmonths|ageinmonthsbyyear|ageinmonthsremain|ageinyears2|ageinyearsremain|The GPS coordinates represents|Collect the GPS coordinates of this location|Does the house you're at have a painted ID number on it?|hh_id|Write the 6 digit household ID here|Id10007|Id10008|Id10009|Id10010|Id10010a| Id10010b|Id10011|Id10013|Id10017|Id10018|Id10018d|Id10020|Id10022|Id10023|Id10052|Id10053|Id10057|Id10061|Id10062|Id10069"
-        
-        person <- person[, !grepl(remove_these, names(person))]
-        person <- person[,apply(person, 2, function(x) x != 'no')]
-        out <- as.data.frame(t(person))
-        out$Question <- rownames(out)
-        # message(nrow(out))
-        
-        names(out) <- c('Answer', 'Question')
-        rownames(out) <- NULL
-        out <- out[, c('Question', 'Answer')]
-        # out <- out[which(nchar(as.character(out$Answer)) < 700),]
-        # out <- 
-        #   tibble(Variable = names(person),
-        #          Response = person[1,])
       }
-    } 
+    }
+    if(ok){
+      pd <- data$va
+      if(cn == 'Mozambique'){
+        pd <- pd %>% filter(grepl('manhica', server))
+      } else {
+        pd <- pd %>% filter(grepl('ihi', server))
+      }
+      person <- pd %>% filter(death_id == idi)
+      person <- get_va_names(person)
+      # remove columns with NA
+      person <- person[ , apply(person, 2, function(x) !any(is.na(x)))]
+      
+      
+      # remove other columns 
+      remove_these <- "write your 3 digit|Id10007|server|first or given|the surname|name of VA|1	Manually write your 3 digit worker ID here|tz001|this_usernameTake a picture of the painted Household ID|isadult1|isadult2|isneonatal|isneonatal2|ischild1|ischild2|instancename|instance_id|device_id|end_time|start_time|todays_date|wid|Do you have a QR code with your worker ID?|wid|ageindays|ageindaysneonate|ageinmonths|ageinmonthsbyyear|ageinmonthsremain|ageinyears2|ageinyearsremain|The GPS coordinates represents|Collect the GPS coordinates of this location|Does the house you're at have a painted ID number on it?|hh_id|Write the 6 digit household ID here|Id10007|Id10008|Id10009|Id10010|Id10010a| Id10010b|Id10011|Id10013|Id10017|Id10018|Id10018d|Id10020|Id10022|Id10023|Id10052|Id10053|Id10057|Id10061|Id10062|Id10069"
+      
+      person <- person[, !grepl(remove_these, names(person))]
+      person <- person[,apply(person, 2, function(x) x != 'no')]
+      out <- as.data.frame(t(person))
+      out$Question <- rownames(out)
+      # message(nrow(out))
+      
+      names(out) <- c('Answer', 'Question')
+      rownames(out) <- NULL
+      out <- out[, c('Question', 'Answer')]
+    } else {
+      out <- NULL
+    }
     if(!is.null(out)){
       if(is.data.frame(out)){
         databrew::prettify(out, nrows = nrow(out))
       }
     }
+    
   })
-
+  
   observeEvent(input$show, {
     # logged_in(TRUE)
     showModal(modalDialog(
       title = "Log in",
       # fluidPage(
-        # fluidRow(
-          div(
-                 textInput('log_in_user', 'User')),
-          div(
-                 passwordInput('log_in_password', 'Password')),
-        # )
-        # ,
-        # fluidRow(
-        #   actionButton('log_in', 'Log in')
-        # )
+      # fluidRow(
+      div(
+        textInput('log_in_user', 'User')),
+      div(
+        passwordInput('log_in_password', 'Password')),
+      # )
+      # ,
+      # fluidRow(
+      #   actionButton('log_in', 'Log in')
+      # )
       # ),
       
       footer =  tagList(
@@ -512,7 +544,7 @@ app_server <- function(input, output, session) {
     cod_1 = input$cod_1
     cod_2 = input$cod_2
     cod_3 = input$cod_3
-   
+    
     # condition if underlying cause of death is not fiilled out, wont submit
     if(cod_1==''){
       submission_success(FALSE)
@@ -523,7 +555,7 @@ app_server <- function(input, output, session) {
       cod_data$cod_3 = cod_3
       cod_data$death_id = death_id
       cod_data$time_stamp <- Sys.time()
-     
+      
       # ISSUE HERE IS THAT SOME (LIKE DIARRHOEA) ARE ASSOCIATED WITH TWO CODES AND VICE VERSA
       cod_data$cod_code_1<- cod_names$cod_code[cod_names$cod_names==cod_data$cod_1][1]
       cod_data$cod_code_2 <- cod_names$cod_code[cod_names$cod_names==cod_data$cod_2][1]
@@ -531,14 +563,14 @@ app_server <- function(input, output, session) {
       dbAppendTable(conn = con, name = 'vatool_cods', value = cod_data)
       submission_success(TRUE)
     }
-   
+    
   })
   
   # Observe changes in inputs
   observeEvent(c(input$cod,input$death_id), {
     submission_success(NULL)
   })
-
+  
   output$ui_submission <- renderUI({
     ss <- submission_success()
     if(is.null(ss)){
@@ -583,7 +615,7 @@ app_server <- function(input, output, session) {
     DT::datatable(out, options = list(scrollX = TRUE)
     )
   })
-
+  
   # Adjudicator submissions
   # Observe submission of cause of death and save
   observeEvent(input$adj_submit_cod, {
@@ -599,7 +631,7 @@ app_server <- function(input, output, session) {
       cod_data$cod_1 = input$adj_cods
       cod_data$death_id = death_id
       cod_data$time_stamp <- Sys.time()
-  
+      
       cod_data$cod_code_1 <- cod_names$cod_code[cod_names$cod_names==cod_data$cod_1][1]
       dbAppendTable(conn = con, name = 'vatool_cods', value = cod_data)
       adj_submission_success(TRUE)
@@ -629,8 +661,8 @@ app_server <- function(input, output, session) {
       cat(paste0('Disconnected from database.'))
     }
   })
-
-
+  
+  
 }
 
 #' Add external Resources to the Application
@@ -645,8 +677,8 @@ mobile_golem_add_external_resources <- function(){
   addResourcePath(
     'www', system.file('app/www', package = 'vatool')
   )
-
-
+  
+  
   share <- list(
     title = "Bohemia VA Tool",
     url = "https://bohemia.team/va/",
@@ -654,7 +686,7 @@ mobile_golem_add_external_resources <- function(){
     description = "Bohemia app",
     twitter_user = "data_brew"
   )
-
+  
   tags$head(
     tags$link(rel="stylesheet", type="text/css", href="www/custom.css")
   )
