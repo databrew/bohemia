@@ -104,11 +104,11 @@ app_ui <- function(request) {
             tabName = 'summary',
             fluidRow(
               div(class = "tableCard",
-                  h2('Individual submissions')
+                  h2('Individual submissions'),
                   DT::dataTableOutput('summary_1')),
               br(), br(),
               div(class = "tableCard",
-                  h2('Country submissions')
+                  h2('Country submissions'),
                   DT::dataTableOutput('summary_2'))
             )
           ),
