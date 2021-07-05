@@ -46,7 +46,7 @@ for(i in 1:length(codes)){
   }  
 }
 
-# Get the "extra" 20% margin
+# Get the "extra" 50 code margin
 codes_df <- tibble(code = codes) %>%
   mutate(hamlet_code = substr(code, 1, 3)) %>%
   mutate(number = substr(code, 5,7)) %>%
