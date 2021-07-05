@@ -49,6 +49,12 @@ app_ui <- function(request) {
             tabName="main",
             fluidPage(
               fluidRow(
+                selectInput(inputId = 'country',
+                            label = 'Choose country',
+                            choices = c('Mozambique', 'Tanzania'),
+                            selected = 'Mozambique')
+              ),
+              fluidRow(
                 column(12, 
                        # uiOutput('top_button'),
                        # br(),
@@ -247,24 +253,25 @@ app_server <- function(input, output, session) {
     if(li){
       cn <- input$country
       liu <- input$log_in_user
-      message('at point 3')
-      # user_role <- users %>% dplyr::filter(username == tolower(liu)) %>% .$role
-      
-      
-      # get ids that have more than one diagnosis
-      user <- users %>% dplyr::filter(username == tolower(liu))
-      userid <- user %>% dplyr::filter(username == tolower(liu)) %>% .$user_id
-      message('at point 3.5')
-      
-      # make sure user cant adjudicate a VA he already adjudicatd 
-      cods <- cods %>% filter(user_id != userid)
-      cod <- cods %>% 
-        group_by(death_id, cod_3) %>% 
-        summarise(counts = n())
-      death_id_choices <- unique(cod$death_id[duplicated(cod$death_id)])
-      
+      # message('at point 3')
+      # # user_role <- users %>% dplyr::filter(username == tolower(liu)) %>% .$role
+      # 
+      # 
+      # # get ids that have more than one diagnosis
+      # user <- users %>% dplyr::filter(username == tolower(liu))
+      # userid <- user %>% dplyr::filter(username == tolower(liu)) %>% .$user_id
+      # message('at point 3.5')
+      # 
+      # # make sure user cant adjudicate a VA he already adjudicatd 
+      # cods <- cods %>% filter(user_id != userid)
+      # cod <- cods %>% 
+      #   group_by(death_id, cod_3) %>% 
+      #   summarise(counts = n())
+      death_id_choices <- va_choices$adjudicator_choices
       
       cods_choices <- cod_choices(country = cn)
+      
+      
       
       fluidPage(
         fluidRow(
@@ -285,7 +292,7 @@ app_server <- function(input, output, session) {
                  # h2(' '),
                  
                  div(class = "tableCard",
-                     selectInput('adj_death_id', 'Select the VA ID', choices = sort(unique(death_id_choices))),
+                     selectInput('adj_death_id', 'Select the VA ID', choices = death_id_choices),
                      selectInput('adj_cods', 'Select underlying cause of death',  choices = c('', sort(unique(names(cods_choices))))),
                      textAreaInput(inputId = 'adj_phy_notes', label = 'Enter additional notes on cause of death', value = NULL),
                      actionButton('adj_submit_cod', 'Submit cause of death and notes'),
@@ -369,12 +376,7 @@ app_server <- function(input, output, session) {
       li_text <- paste0('Welcome ', liu)
       p(li_text)
       
-      fluidRow(
-        selectInput(inputId = 'country',
-                    label = 'Choose country',
-                    choices = c('Mozambique', 'Tanzania'),
-                    selected = 'Mozambique')
-      )
+      
     } else if (lif){
       p('Username or password incorrect')
     } else {
@@ -384,14 +386,19 @@ app_server <- function(input, output, session) {
     
   })
   
-  # Selection input for VA ID
-  output$ui_select_va <- renderUI({
-    message('in ui_select_va')
+  # Create a reactive object to store the choices of death ids
+  va_choices <- reactiveValues(choices = c(),
+                               adjudicator_choices = c())
+  
+  # Observe the log in, and upon log in, populate the roster of choices
+  observeEvent(input$log_in, {
+    message('JUST LOGGED IN')
     li <- logged_in()
+    # if they just logged in, populate choices of deaht ids
     cn <- input$country
     ok <- FALSE
-    message('cn is ', cn)
-    message('li is ', li)
+    message('making va choices: cn is ', cn)
+    message('making va choices: li is ', li)
     if(li){
       if(!is.null(cn)){
         if(nchar(cn) > 0){
@@ -420,6 +427,43 @@ app_server <- function(input, output, session) {
       emit<-frequency %>% dplyr::filter(Freq > 1)
       choices <- setdiff(choices, emit$Var1)
       choices <- choices[!is.na(choices)]
+      va_choices$choices <- choices
+      
+      # Also populate the adjudicator choices
+      # get ids that have more than one diagnosis
+      user <- users %>% dplyr::filter(username == tolower(liu))
+      userid <- user %>% dplyr::filter(username == tolower(liu)) %>% .$user_id
+      
+      # make sure user cant adjudicate a VA he already adjudicatd 
+      cods <- cods %>% filter(user_id != userid)
+      cod <- cods %>% 
+        group_by(death_id, cod_3) %>% 
+        summarise(counts = n())
+      death_id_choices <- unique(cod$death_id[duplicated(cod$death_id)])
+      death_id_choices <- sort(unique(death_id_choices))
+      va_choices$adjudicator_choices <- death_id_choices
+      
+    }
+  })
+  
+  
+  # Selection input for VA ID
+  output$ui_select_va <- renderUI({
+    message('in ui_select_va')
+    li <- logged_in()
+    cn <- input$country
+    ok <- FALSE
+    message('cn is ', cn)
+    message('li is ', li)
+    if(li){
+      if(!is.null(cn)){
+        if(nchar(cn) > 0){
+          ok <- TRUE
+        }
+      }
+    }
+    if(ok){
+      choices <- va_choices$choices
       selectInput('death_id', 'Select the VA ID', choices = sort(unique(choices)), selected = sort(unique(choices))[1]) 
     } else {
       NULL
@@ -570,6 +614,10 @@ app_server <- function(input, output, session) {
       cod_data$cod_code_3 <- cod_names$cod_code[cod_names$cod_names==cod_data$cod_3][1]
       cod_data$doctor_note <- pn
       dbAppendTable(conn = con, name = 'vatool_cods', value = cod_data)
+      # remove VA id from choices 
+      old_choices <- va_choices$choices 
+      new_choices <- old_choices[!old_choices %in% death_id]
+      va_choices$choices <- new_choices
       submission_success(TRUE)
     }
     
@@ -646,6 +694,12 @@ app_server <- function(input, output, session) {
       cod_data$cod_code_1 <- cod_names$cod_code[cod_names$cod_names==cod_data$cod_1][1]
       dbAppendTable(conn = con, name = 'vatool_cods', value = cod_data)
       adj_submission_success(TRUE)
+      
+      # also remove the now adjudicated ID from the choices
+      old_choices <- va_choices$adjudicator_choices
+      new_choices <- old_choices[!old_choices %in% death_id]
+      va_choices$adjudicator_choices <- new_choices
+      
     }
     
   })
