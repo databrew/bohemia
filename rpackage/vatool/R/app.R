@@ -204,14 +204,17 @@ app_server <- function(input, output, session) {
     }
     
   })
-  
+  table_cods <- reactiveValues(data=cods)
+
   # # Summary table 1
   output$summary_1 <- DT::renderDataTable({
     li <- logged_in()
     out <- NULL
     if(li){
+      temp_cods <- table_cods$data
+      
       # join users and cods
-      out <- left_join(users, cods) %>%
+      out <- left_join(users, temp_cods) %>%
         group_by(`Last name` = last_name) %>%
         summarise(`Number of VAs coded` = length(which(!is.na(time_stamp))))
     }
@@ -232,7 +235,9 @@ app_server <- function(input, output, session) {
         summarise(`Total VAs` = n()) %>%
         mutate(country = ifelse(grepl('ihi', country), 'Tanzania', 'Mozambique'))
       
-      out <- left_join(users, cods) %>%
+      temp_cods <- table_cods$data
+      
+      out <- left_join(users, temp_cods) %>%
         group_by(country) %>%
         summarise(`Number of VAs coded` = length(which(!is.na(time_stamp)))) %>% 
         inner_join(pd)
@@ -596,7 +601,7 @@ app_server <- function(input, output, session) {
     cod_1 = input$cod_1
     cod_2 = input$cod_2
     cod_3 = input$cod_3
-    save(cod_data, pn, cod_1, cod_2, cod_3,cod_names, file = 'temp_cods.rda')
+    # save(cod_data, pn, cod_1, cod_2, cod_3,cod_names, file = 'temp_cods.rda')
     # condition if underlying cause of death is not fiilled out, wont submit
     if(cod_1==''){
       submission_success(FALSE)
@@ -614,6 +619,9 @@ app_server <- function(input, output, session) {
       cod_data$cod_code_3 <- cod_names$cod_code[cod_names$cod_names==cod_data$cod_3][1]
       cod_data$doctor_note <- pn
       dbAppendTable(conn = con, name = 'vatool_cods', value = cod_data)
+      old_cods <- table_cods$data
+      new_cods <- rbind(old_cods, cod_data)
+      table_cods$data <- new_cods
       # remove VA id from choices 
       old_choices <- va_choices$choices 
       new_choices <- old_choices[!old_choices %in% death_id]
@@ -665,7 +673,9 @@ app_server <- function(input, output, session) {
         liu <- input$log_in_user
         user <- users %>% dplyr::filter(username == tolower(liu))
         userid <- user %>% dplyr::filter(username == tolower(liu)) %>% .$user_id
-        out <- cods %>% dplyr::filter(user_id == userid)
+        temp_cods <- table_cods$data
+        
+        out <- temp_cods %>% dplyr::filter(user_id == userid)
         names(out) <-  c('User ID', 'Death ID', 'Immediate COD code', 'Immediate COD', 'Intermediary COD code', 'Intermediary COD', 'Underlying COD code', 'Underlying COD', 'Time stamp', 'Physician Notes')
       }
     } 
