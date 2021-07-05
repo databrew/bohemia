@@ -187,7 +187,7 @@ app_server <- function(input, output, session) {
       data$session <- dplyr::tibble(user_id = user_id, start_time=start_time, end_time=end_time)
       
       # create cod table
-      data$cod <- dplyr::tibble(user_id = user_id, death_id = NA, cod_code_1 = NA,cod_1 =NA,cod_code_2 = NA,cod_2 =NA,cod_code_3 = NA,cod_3 =NA, time_stamp = NA)
+      data$cod <- dplyr::tibble(user_id = user_id, death_id = NA, cod_code_1 = NA,cod_1 =NA,cod_code_2 = NA,cod_2 =NA,cod_code_3 = NA,cod_3 =NA, time_stamp = NA, doctor_note = NA)
       
     } else {
       logged_in(FALSE)
@@ -206,7 +206,6 @@ app_server <- function(input, output, session) {
       out <- left_join(users, cods) %>%
         group_by(`Last name` = last_name) %>%
         summarise(`Number of VAs coded` = length(which(!is.na(time_stamp))))
-      
     }
     if(!is.null(out)){
       if(is.data.frame(out)){
@@ -345,7 +344,7 @@ app_server <- function(input, output, session) {
         out <- cods %>% filter(death_id == idi)
       }
     } 
-    names(out) <- c('User ID', 'Death ID', 'Immediate COD code', 'Immediate COD', 'Intermediary COD code', 'Intermediary COD', 'Underlying COD code', 'Underlying COD', 'Time stamp')
+    names(out) <- c('User ID', 'Death ID', 'Immediate COD code', 'Immediate COD', 'Intermediary COD code', 'Intermediary COD', 'Underlying COD code', 'Underlying COD', 'Time stamp', 'Physician Notes')
     out
   })
   
@@ -445,7 +444,7 @@ app_server <- function(input, output, session) {
           selectInput('cod_2', 'Select intermediary cause of death', choices =c('', sort(unique(names(choices)))), selected = ''),
           selectInput('cod_3', 'Select underlying cause of death', choices =c('', sort(unique(names(choices)))), selected = '')
         ),
-        textInput(inputId = 'phy_notes', label = 'Enter additional notes on cause of death', value = NULL),
+        textAreaInput(inputId = 'phy_notes', label = 'Enter additional notes on cause of death', value = NULL),
         fluidRow(
           actionButton('submit_cod', 'Submit causes of death and notes')
         )
@@ -547,10 +546,11 @@ app_server <- function(input, output, session) {
     cn <- input$country
     cod_names <- cod_data(country = cn)
     cod_data <- data$cod
+    pn <- input$phy_notes
     cod_1 = input$cod_1
     cod_2 = input$cod_2
     cod_3 = input$cod_3
-    
+    save(cod_data, pn, cod_1, cod_2, cod_3,cod_names, file = 'temp_cods.rda')
     # condition if underlying cause of death is not fiilled out, wont submit
     if(cod_1==''){
       submission_success(FALSE)
@@ -563,9 +563,10 @@ app_server <- function(input, output, session) {
       cod_data$time_stamp <- Sys.time()
       
       # ISSUE HERE IS THAT SOME (LIKE DIARRHOEA) ARE ASSOCIATED WITH TWO CODES AND VICE VERSA
-      cod_data$cod_code_1<- cod_names$cod_code[cod_names$cod_names==cod_data$cod_1][1]
+      cod_data$cod_code_1 <- cod_names$cod_code[cod_names$cod_names==cod_data$cod_1][1]
       cod_data$cod_code_2 <- cod_names$cod_code[cod_names$cod_names==cod_data$cod_2][1]
       cod_data$cod_code_3 <- cod_names$cod_code[cod_names$cod_names==cod_data$cod_3][1]
+      cod_data$doctor_note <- pn
       dbAppendTable(conn = con, name = 'vatool_cods', value = cod_data)
       submission_success(TRUE)
     }
@@ -615,7 +616,7 @@ app_server <- function(input, output, session) {
         user <- users %>% dplyr::filter(username == tolower(liu))
         userid <- user %>% dplyr::filter(username == tolower(liu)) %>% .$user_id
         out <- cods %>% dplyr::filter(user_id == userid)
-        names(out) <-  c('User ID', 'Death ID', 'Immediate COD code', 'Immediate COD', 'Intermediary COD code', 'Intermediary COD', 'Underlying COD code', 'Underlying COD', 'Time stamp')
+        names(out) <-  c('User ID', 'Death ID', 'Immediate COD code', 'Immediate COD', 'Intermediary COD code', 'Intermediary COD', 'Underlying COD code', 'Underlying COD', 'Time stamp', 'Physician Notes')
       }
     } 
     DT::datatable(out, options = list(scrollX = TRUE)
@@ -628,6 +629,7 @@ app_server <- function(input, output, session) {
     cn <- input$country
     cod_names <- cod_data(country = cn)
     cod_data <- data$cod
+    pn <- input$adj_phy_notes
     cod_1 = input$adj_cods
     # condition if underlying cause of death is not fiilled out, wont submit
     if(cod_1==''){
@@ -637,6 +639,7 @@ app_server <- function(input, output, session) {
       cod_data$cod_1 = input$adj_cods
       cod_data$death_id = death_id
       cod_data$time_stamp <- Sys.time()
+      cod_data$doctor_note <- pn
       
       cod_data$cod_code_1 <- cod_names$cod_code[cod_names$cod_names==cod_data$cod_1][1]
       dbAppendTable(conn = con, name = 'vatool_cods', value = cod_data)
