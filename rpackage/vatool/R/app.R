@@ -136,7 +136,7 @@ app_server <- function(input, output, session) {
   if(is_local){
     message('Running with the local datbase---------------------')
   } else {
-    messgae('Running with the remote AWS database---------------')
+    message('Running with the remote AWS database---------------')
   }
   
   logged_in <- reactiveVal(value = FALSE)
