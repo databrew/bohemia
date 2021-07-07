@@ -156,14 +156,16 @@ census_subs <- out_list$clean_minicensus_repeat_hh_sub
 df <- list_generation_visit_control(census_data = census_data,
                               census_people = census_people,
                               census_subs = census_subs,
+                              data_list = data_list,
                               agg_list = agg_list,
                               keyfile = keyfile,
                               keyfile_public = keyfile_public,
-                              location = NULL, #c('NOR', 'CHM', 'BBB', 'AGO', 'CHT'), # set to null in order to do all locations
+                              location_code = NULL, # NULL #c('NOR', 'CHM', 'BBB', 'AGO', 'CHT'), # set to null in order to do all locations
                               output_file = NULL, #output_file, # set to null in order to return a dataframe in memory
                               fake_data = FALSE,
                               add_ids = NULL, # set as a number to add additional empty ids
-                              html = FALSE) # set to TRUE if you want an html table ready for printing
+                              html = FALSE,  # set to TRUE if you want an html table ready for printing
+                              start_date = NULL) # '2021-06-20'# remove observations which have been modified since the start date
 
 
 # Needs to conform to these specs: https://docs.google.com/document/d/1AB4AuEiMwPQdBIQvrWaus1XY36gFGmtZ4f65kzgYeug/edit?ts=6087c05d&pli=1

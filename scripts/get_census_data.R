@@ -73,7 +73,7 @@ get_data_briefcase <- function(url,
   owd <- getwd()
   setwd(briefcase_dir)
   cli_text <- paste0(
-    'java -jar ',
+    'java -Xms512m -Xmx16g -jar ',
     jar_file_briefcase, ' --pull_aggregate',
     ' -U ', url,
     ' -u ', user,
@@ -145,7 +145,8 @@ for(i in 1:length(table_names)){
                        pass = xcreds$pass,
                        is_linux = is_linux,
                        download_dir = download_dir,
-                       attachments = FALSE)
+                       attachments = FALSE, 
+                       dry_run = TRUE)
     Sys.sleep(1)
     df <- readr::read_csv(paste0('default/',
                                  this_table,
@@ -155,6 +156,7 @@ for(i in 1:length(table_names)){
 
 }
 names(data_list) <- table_names
+# save.image('~/Desktop/joe.RData')
 
 ## Encrypt names
 # data_list$hh_member$name <- encrypt_private_data(
