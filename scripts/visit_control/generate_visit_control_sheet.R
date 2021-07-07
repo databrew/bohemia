@@ -9,8 +9,13 @@ library(bohemia)
 
 
 # Define some parameters
-country <- 'Tanzania'
-iso <- tolower(substr(country, 1, 3))
+country <- 'Mozambique'
+if(country == 'Mozambique'){
+  iso <- 'MOZ'
+} else {
+  iso <- 'TZA'
+}
+
 use_real_names <- TRUE
 keyfile = '../credentials/bohemia_priv.pem'
 keyfile_public = '../credentials/bohemia_pub.pem'
