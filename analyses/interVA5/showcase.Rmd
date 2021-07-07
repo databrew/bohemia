@@ -42,6 +42,8 @@ ggplot2::theme_set(theme_bw())
 if('data.RData' %in% dir()){
   load('data.RData')
 } else {
+  
+  source('convert_data.R')
     
   is_local <- FALSE
   drv <- RPostgres::Postgres()
@@ -649,10 +651,11 @@ if('data.RData' %in% dir()){
   out_list <- list()
   individual <- out$VA5
   for(i in 1:length(individual)){
+    message(i)
     this_individual <- individual[[i]]
     id <- this_individual$ID
-    x <- summary(out, id = cause1)
-    probs <- x$probs
+    x <- this_individual$CAUSE1
+    probs <- this_individual$wholeprob
     vals <- as.numeric(probs)
     the_names <- names(probs)  
     df <- tibble(ID = id,
@@ -677,7 +680,6 @@ print(summary(out))
 
 ```{r, eval = FALSE}
 # Below are population-level summed probabilities
-
 pd <- df %>%
   group_by(COD) %>%
   summarise(Probability = sum(Probability)) %>%
@@ -706,5 +708,17 @@ pd <- df %>%
 databrew::prettify(pd, 
                    nrows = nrow(pd),
                    round_digits = 10)
+```
+
+```{r}
+population <- df %>%
+  arrange(desc(Probability)) %>%
+  group_by(ID) %>%
+  summarise(most_likely = dplyr::first(COD)) %>%
+  ungroup %>%
+  group_by(most_likely) %>%
+  tally %>% 
+  mutate(p = n / sum(n) * 100) %>%
+  arrange(desc(p))
 ```
 

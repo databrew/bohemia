@@ -2,7 +2,7 @@
 title: "VA data dictionary"
 output: html_document
 params:
-    language: 'English'
+    language: 'Swahili'
     relevant: FALSE
     include_variable_names: FALSE
     choice_names_too: FALSE
@@ -94,5 +94,5 @@ if(rel){
   dd[,rel_var] <- clean_up(dd[,rel_var])
 }
 ht <- bohemia::prettify(dd, nrows = nrow(dd), download_options = TRUE)
-htmltools::save_html(html = ht, file = '../../rpackage/vatool/misc/dictionary.html')
+htmltools::save_html(html = ht, file = '../../rpackage/vatool/misc/dictionary_sw.html')
 ```
