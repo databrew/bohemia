@@ -146,7 +146,7 @@ for(i in 1:length(table_names)){
                        is_linux = is_linux,
                        download_dir = download_dir,
                        attachments = FALSE, 
-                       dry_run = TRUE)
+                       dry_run = FALSE)
     Sys.sleep(1)
     df <- readr::read_csv(paste0('default/',
                                  this_table,
