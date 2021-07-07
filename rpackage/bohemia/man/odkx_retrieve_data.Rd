@@ -13,7 +13,8 @@ odkx_retrieve_data(
   pass,
   is_linux = FALSE,
   download_dir = NULL,
-  attachments = TRUE
+  attachments = TRUE,
+  dry_run = FALSE
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ odkx_retrieve_data(
 \item{download_dir}{Path to download the data; if NULL, will download to the directory of the jar file by default}
 
 \item{attachments}{Boolean; whether or not to download attachments too (default is TRUE)}
+
+\item{dry_run}{Whether to carry out}
 }
 \value{
 A table will be created
