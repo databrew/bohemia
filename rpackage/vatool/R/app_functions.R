@@ -43,13 +43,17 @@ load_va_data <- function(is_local = FALSE,
 }
 
 # function for getting readable names
-get_va_names <- function(va_data){
+get_va_names <- function(va_data, country = 'Tanzania'){
   col_names <- names(va_data)
   for(i in 1:length(col_names)){
     this_col <- col_names[i]
     if(any(this_col==tolower(va_names$name))){
       name_index <- which(this_col ==tolower(va_names$name))
-      names(va_data)[i] <- as.character(va_names$label_english[name_index])
+      if(country == 'Tanzania'){
+        names(va_data)[i] <- as.character(va_names$label_english[name_index])
+      } else {
+        names(va_data)[i] <- as.character(va_names$label_portuguese[name_index])
+      }
     }
   }
   return(va_data)
@@ -126,9 +130,12 @@ get_db_connection <- function(local = FALSE){
     psql_end_point = creds$e
     psql_user = creds$u
     psql_pass = creds$p
-    con <- dbConnect(drv, dbname='vadb', host=psql_end_point,
+    con <- dbConnect(drv, 
+                     dbname='vadb', 
+                     host=psql_end_point,
                      port=5432,
-                     user=psql_user, password=psql_pass)
+                     user=psql_user, 
+                     password=psql_pass)
   }
   
   return(con)

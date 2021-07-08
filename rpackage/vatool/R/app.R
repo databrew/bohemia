@@ -327,20 +327,25 @@ app_server <- function(input, output, session) {
           pd <- pd %>% filter(grepl('ihi', server))
         }
         person <- pd %>% filter(death_id == idi)
-        person <- get_va_names(person)
-        # remove columns with NA
-        person <- person[ , apply(person, 2, function(x) !any(is.na(x)))] 
         # remove other columns
         remove_these <- "write your 3 digit|Id10007|server|first or given|the surname|name of VA|1	Manually write your 3 digit worker ID here|tz001|this_usernameTake a picture of the painted Household ID|isadult1|isadult2|isneonatal|isneonatal2|ischild1|ischild2|instancename|instance_id|device_id|end_time|start_time|todays_date|wid|Do you have a QR code with your worker ID?|wid|ageindays|ageindaysneonate|ageinmonths|ageinmonthsbyyear|ageinmonthsremain|ageinyears2|ageinyearsremain|The GPS coordinates represents|Collect the GPS coordinates of this location|Does the house you're at have a painted ID number on it?|hh_id|Write the 6 digit household ID here|Id10007|Id10008|Id10009|Id10010|Id10010a| Id10010b|Id10011|Id10013|Id10017|Id10018|Id10018d|Id10020|Id10022|Id10023|Id10052|Id10053|Id10057|Id10061|Id10062|Id10069"
         
+        # remove columns with NA
         person <- person[, !grepl(remove_these, names(person))]
+        person <- get_va_names(person, country = cn)
+        person <- person[ , apply(person, 2, function(x) !any(is.na(x)))] 
         person <- person[,apply(person, 2, function(x) x != 'no')]
         
         out <- as.data.frame(t(person))
         out$Question <- rownames(out)
-        names(out) <- c('Answer', 'Question')
-        rownames(out) <- NULL
-        out <- out[, c('Question', 'Answer')]
+        if(ncol(out)==2){
+          names(out) <- c('Answer', 'Question')
+          rownames(out) <- NULL
+          out <- out[, c('Question', 'Answer')]
+        } else {
+          out <- NULL
+        }
+        
         
       }
     } 
@@ -396,7 +401,7 @@ app_server <- function(input, output, session) {
                                adjudicator_choices = c())
   
   # Observe the log in, and upon log in, populate the roster of choices
-  observeEvent(input$log_in, {
+  observeEvent(c(input$log_in,input$country), {
     message('JUST LOGGED IN')
     li <- logged_in()
     # if they just logged in, populate choices of deaht ids
@@ -413,6 +418,8 @@ app_server <- function(input, output, session) {
     }
     if(ok){
       pd <- data$va
+      save(pd, file = 'tpd.rda')
+      
       if(cn == 'Mozambique'){
         pd <- pd %>% filter(grepl('manhica', server))
       } else {
@@ -531,14 +538,17 @@ app_server <- function(input, output, session) {
         pd <- pd %>% filter(grepl('ihi', server))
       }
       person <- pd %>% filter(death_id == idi)
-      person <- get_va_names(person)
-      # remove columns with NA
-      person <- person[ , apply(person, 2, function(x) !any(is.na(x)))]
+      # save(person, file = 'temp_person.rda')
+      
+      
       # remove other columns 
       remove_these <- "write your 3 digit|Id10007|server|first or given|the surname|name of VA|1	Manually write your 3 digit worker ID here|tz001|this_usernameTake a picture of the painted Household ID|isadult1|isadult2|isneonatal|isneonatal2|ischild1|ischild2|instancename|instance_id|device_id|end_time|start_time|todays_date|wid|Do you have a QR code with your worker ID?|wid|ageindays|ageindaysneonate|ageinmonths|ageinmonthsbyyear|ageinmonthsremain|ageinyears2|ageinyearsremain|The GPS coordinates represents|Collect the GPS coordinates of this location|Does the house you're at have a painted ID number on it?|hh_id|Write the 6 digit household ID here|Id10007|Id10008|Id10009|Id10010|Id10010a| Id10010b|Id10011|Id10013|Id10017|Id10018|Id10018d|Id10020|Id10022|Id10023|Id10052|Id10053|Id10057|Id10061|Id10062|Id10069"
       
       
       person <- person[, !grepl(remove_these, names(person))]
+      person <- get_va_names(person, country = cn)
+      # remove columns with NA
+      person <- person[ , apply(person, 2, function(x) !any(is.na(x)))]
       person <- person[,apply(person, 2, function(x) x != 'no')]
       out <- as.data.frame(t(person))
       out$Question <- rownames(out)
