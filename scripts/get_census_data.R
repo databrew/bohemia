@@ -37,7 +37,7 @@ Sys.setenv(
 # Define some parameters for ODK-X retrieval
 suitcase_dir <- '/home/joebrew/Documents/suitcase'
 briefcase_dir <- '/home/joebrew/Documents/briefcase'
-briefcase_storage_dir <- briefcase_dir
+briefcase_storage_dir <- getwd()#briefcase_dir
 jar_file <- 'ODK-X_Suitcase_v2.1.8.jar'
 jar_file_briefcase <- 'ODK-Briefcase-v1.18.0.jar'
 odkx_path <- '/home/joebrew/Documents/bohemia/odkx/app/config' # must be full path!
@@ -73,7 +73,7 @@ get_data_briefcase <- function(url,
   owd <- getwd()
   setwd(briefcase_dir)
   cli_text <- paste0(
-    'java -jar ',
+    'java -Xms512m -Xmx16g -jar ',
     jar_file_briefcase, ' --pull_aggregate',
     ' -U ', url,
     ' -u ', user,
@@ -135,22 +135,28 @@ table_names <- c('census',
                  'hh_water_body')
 data_list <- list()
 for(i in 1:length(table_names)){
-  this_table <- table_names[i]
-  odkx_retrieve_data(suitcase_dir = suitcase_dir,
-                     jar_file = jar_file,
-                     server_url = xcreds$server,
-                     table_id = this_table,
-                     user = xcreds$user,
-                     pass = xcreds$pass,
-                     is_linux = is_linux,
-                     download_dir = download_dir,
-                     attachments = FALSE)
-  df <- readr::read_csv(paste0('default/',
-                               this_table,
-                               '/link_unformatted.csv'))
-  data_list[[i]] <- df
+  try({
+    this_table <- table_names[i]
+    odkx_retrieve_data(suitcase_dir = suitcase_dir,
+                       jar_file = jar_file,
+                       server_url = xcreds$server,
+                       table_id = this_table,
+                       user = xcreds$user,
+                       pass = xcreds$pass,
+                       is_linux = is_linux,
+                       download_dir = download_dir,
+                       attachments = FALSE, 
+                       dry_run = FALSE)
+    Sys.sleep(1)
+    df <- readr::read_csv(paste0('default/',
+                                 this_table,
+                                 '/link_unformatted.csv'))
+    data_list[[i]] <- df
+  })
+
 }
 names(data_list) <- table_names
+# save.image('~/Desktop/joe.RData')
 
 ## Encrypt names
 # data_list$hh_member$name <- encrypt_private_data(

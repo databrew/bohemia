@@ -272,7 +272,8 @@ app_server <- function(input, output, session) {
       }
     }
     if(ok){
-      joined <- left_join(a3, a4) %>%
+      joined <- left_join(a3 %>% mutate(qr = as.character(qr)), 
+                          a4 %>% mutate(qr = as.character(qr))) %>%
         filter(!is.na(wing_length))
       DT::datatable(joined,
                     # selection = list(mode = 'single', selected = c(1)),
