@@ -21,7 +21,6 @@ load_va_data <- function(is_local = FALSE,
   #   stop('YOU NEED TO DOWNLOAD va.csv INTO data-raw. Get from https://trello.com/c/75qsyxWu/2368-bohemia-va-tool-create-functioning-tool')
   # }
   drv <- RPostgres::Postgres()
-  
   if(get_new){
     if(is_local){
       con <- dbConnect(drv = drv,
@@ -43,6 +42,10 @@ load_va_data <- function(is_local = FALSE,
 }
 
 # function for getting readable names
+
+# select_names <- va_survey$name[grepl('select', va_survey$type)]
+# select_names <- select_names[!is.na(select_names)]
+
 get_va_names <- function(va_data, country = 'Tanzania'){
   col_names <- names(va_data)
   for(i in 1:length(col_names)){
@@ -52,7 +55,18 @@ get_va_names <- function(va_data, country = 'Tanzania'){
       if(country == 'Tanzania'){
         names(va_data)[i] <- as.character(va_names$label_english[name_index])
       } else {
+        if(!is.na(as.character(va_data[i])) & names(va_data)[i] %in% tolower(select_names)){
+          temp <- unique(va_choices$`label::Portuguese`[as.character(va_data[i]) ==va_choices$name])
+          if(length(temp)>1){
+            ct <- nchar(temp) - nchar(va_data[i])
+            this_index <- which(ct == min(ct, na.rm = T))[1]
+            temp <- temp[this_index]
+          }
+          va_data[i] <- temp
+        }
         names(va_data)[i] <- as.character(va_names$label_portuguese[name_index])
+        print(i)
+        
       }
     }
   }

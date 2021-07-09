@@ -333,8 +333,8 @@ app_server <- function(input, output, session) {
         # remove columns with NA
         person <- person[, !grepl(remove_these, names(person))]
         person <- get_va_names(person, country = cn)
-        person <- person[ , apply(person, 2, function(x) !any(is.na(x)))] 
-        person <- person[,apply(person, 2, function(x) x != 'no')]
+        person <- person[, apply(person, 2, function(x) !any(is.na(x)))] 
+        # person <- person[, apply(person, 2, function(x) x != 'no')]
         
         out <- as.data.frame(t(person))
         out$Question <- rownames(out)
@@ -345,8 +345,6 @@ app_server <- function(input, output, session) {
         } else {
           out <- NULL
         }
-        
-        
       }
     } 
     out
@@ -546,10 +544,12 @@ app_server <- function(input, output, session) {
       
       
       person <- person[, !grepl(remove_these, names(person))]
+      # person <- person[,apply(person, 2, function(x) x != 'no')]
+      
+      save(person, file = 'temp_person.rda')
       person <- get_va_names(person, country = cn)
       # remove columns with NA
       person <- person[ , apply(person, 2, function(x) !any(is.na(x)))]
-      person <- person[,apply(person, 2, function(x) x != 'no')]
       out <- as.data.frame(t(person))
       out$Question <- rownames(out)
       message('in va_table number of columns in va form ', ncol(out))
