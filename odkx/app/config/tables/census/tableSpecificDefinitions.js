@@ -2012,7 +2012,7 @@ window.odkTableSpecificDefinitions = {
       "text": {
         "default": "Adult female cattle > 1 year old",
         "pt": "Bovino fêmea adulta > 1 ano de idade",
-        "sw": "Jike mkubwa Umri zaidi ya mwaka 1"
+        "sw": "Ng'ombe Jike mkubwa Umri zaidi ya mwaka 1"
       },
       "_row_num": 228
     },
@@ -2021,7 +2021,7 @@ window.odkTableSpecificDefinitions = {
       "text": {
         "default": "Adult male cattle > 1 year old",
         "pt": "Bovino macho adulto > 1 ano de idade",
-        "sw": "Ndume mkubwa umri zaidi ya mwaka 1"
+        "sw": "Ng'ombe dume mkubwa umri zaidi ya mwaka 1"
       },
       "_row_num": 229
     },
@@ -3118,7 +3118,8 @@ window.odkTableSpecificDefinitions = {
       "string_token": "err_ind_quest_incomplete",
       "text": {
         "default": "All individual questionnaires must be completed.",
-        "pt": "Todos os questionários individuais devem ser preenchidos."
+        "pt": "Todos os questionários individuais devem ser preenchidos.",
+        "sw": "Madodoso yote ya Mtu Binafsi ni lazma yakamilike kwanza"
       },
       "_row_num": 352
     }

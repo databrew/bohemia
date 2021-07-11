@@ -3911,7 +3911,7 @@ window.odkTableSpecificDefinitions = {
       "text": {
         "default": "13. Is this participant currently suffering from any chronic disease? (long term disease)",
         "pt": "13. Este participante sofre de alguma doença crónica? (Doença de longa duração)",
-        "sw": "13. Mshiriki huyu kwa sasa unaugua kutokana na ugonjwa wowote sugu? (ugonjwa wa muda mrefu)"
+        "sw": "13. Mshiriki huyu anaugua ugonjwa wowote sugu kwa sasa? (ugonjwa wa muda mrefu)"
       },
       "_row_num": 443
     },
@@ -4145,7 +4145,7 @@ window.odkTableSpecificDefinitions = {
       "text": {
         "default": "31a. What is this participant doing?",
         "pt": "31a. O que é que o participante faz?",
-        "sw": "31a. Mshiriki huyu anafanya nini?"
+        "sw": "31a. Ikiwa ni kabla ya  jua kuchomoza, Mshiriki huyu anafanya  nini?"
       },
       "_row_num": 469
     },
