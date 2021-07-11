@@ -24,5 +24,6 @@ CREATE TABLE vatool_cods (
   cod_2 TEXT,
   cod_code_3 TEXT,
   cod_3 TEXT,
-  time_stamp TIMESTAMP
+  time_stamp TIMESTAMP,
+  doctor_note TEXT
 );

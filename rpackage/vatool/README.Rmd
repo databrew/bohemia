@@ -33,12 +33,17 @@ Save a `credentials/credentials.yaml` in `dev`.
 
 Save a `credentials/vatoolusers.csv` in `dev`. 
 
+## Setting up ICD-10 codes
+
+Run `create_data.R` in `data-raw`. This will create two r data objects named `icd_data_moz` and `icd_data_tza`.
+
 ## Setting up back-end
 
 You'll need to set up a back-end. In order to this, create a postgres database named `bohemia`:
 
 ```
 psql
+drop database vadb;   
 create database vadb;
 exit
 ```
