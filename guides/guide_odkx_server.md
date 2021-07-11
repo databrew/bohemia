@@ -34,7 +34,7 @@ ODK-X Cloud Endpoints are servers that communicate with the ODK-X Android applic
 
 To run the project, we use the [ODK-X Sync Endpoint](https://docs.odk-x.org/sync-endpoint/) set up on AWS.
 
-For the bohemia project, we set up several endpoints. Each endpoint has its own database. Mobile devices should be manually connected to the relevant endpoint. This section explains how to set up the first endpoint. The process for all the other endpoints is described in the "Set Up more instances of the service and subdomains" section. The points below that are different for that section are marked as (x1), (x2), ...
+For the bohemia project, we set up several endpoints. Each endpoint has its own database. Mobile devices should be manually connected to the relevant endpoint. This section explains how to set up the first endpoint. The process for all the other endpoints is described in the [Set Up more instances of the service and subdomains](#set-up-more-instances-of-the-service-and-subdomains) section. The points below that are different for that section are marked as (x1), (x2), ...
 
 ### Set Up the first of ODK-X Sync Endpoints on AWS
 
@@ -297,7 +297,7 @@ _After creating the users required, there is no longer need access to the LDAP a
 
 ## Set Up more instances of the service and subdomains
 
-Follow the instructions in the section "ODK-X Cloud Endpoints" with the following exceptions (wherever I use big letter N, you should use the consecutive number of the instance, e.g. 1):
+Follow the instructions in the section [ODK-X Cloud Endpoints](#odk-x-cloud-endpoints) with the following exceptions (wherever I use big letter N, you should use the consecutive number of the instance, e.g. 1):
 
 - (x1) In the `6. Configure Security Group` tab, the name of the security group should be `custom_security_group_N` (where N is the consecutive number of the instance).
 - (x2) Instead of the section about configuring a key pair, choose the option "Select an existing key pair" and select it instead of generating a new one.
