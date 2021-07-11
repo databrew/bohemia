@@ -2,6 +2,7 @@ library(shiny)
 library(dplyr)
 library(RPostgres)
 library(DBI)
+
 # # load VA data (for now, this is fake)
 load_va_data <- function(is_local = FALSE,
                          use_cached = TRUE,
@@ -23,8 +24,9 @@ load_va_data <- function(is_local = FALSE,
   drv <- RPostgres::Postgres()
   if(get_new){
     if(is_local){
+
       con <- dbConnect(drv = drv,
-                       dbname = creds$dbname)
+                       dbname = 'bohemia')
     } else {
       creds <- yaml::yaml.load_file(credentials_path)
       psql_end_point = creds$endpoint
