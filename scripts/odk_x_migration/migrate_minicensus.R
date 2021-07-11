@@ -5,7 +5,10 @@ kf <- '../../credentials/bohemia_priv.pem' #path to private key for name decrypt
 creds <- yaml::yaml.load_file('../../credentials/credentials.yaml')
 use_real_names <- FALSE # whether to decrypt names (TRUE) or use fakes ones (false)
 is_linux <- Sys.info()['sysname'] == 'Linux'
-only_hamlets <- c('BAA', 'DOW', 'KIS', 'LIK') # set to NULL if you want all hamlets
+library(dplyr)
+ll <- bohemia::locations
+ll_sub <- ll %>% filter(Ward == 'Mopeia sede | Nzanza')
+only_hamlets <- ll_sub$code # c('BAA', 'DOW', 'KIS', 'LIK') # set to NULL if you want all hamlets
 
 print(creds$odkx_server)
 
@@ -439,18 +442,19 @@ message('Loading minicensus data')
 
 library(bohemia)
 # Define the country
-country <- 'Tanzania'
+country <- 'Mozambique'
 
 # Read in minicensus data
-if('minicensus_data.RData' %in% dir()){
-  load('minicensus_data.RData')
+file_name <- paste0(country, '_mincensus_data.RData')
+if(file_name %in% dir()){
+  load(file_name)
 } else {
   minicensus_data <- load_odk_data(the_country = country,
                           credentials_path = '../../credentials/credentials.yaml', # request from Databrew
                           users_path = '../../credentials/users.yaml', # request from Databrew
                           efficient = FALSE)
   save(minicensus_data,
-       file = 'minicensus_data.RData')
+       file = file_name)
 }
 
 out_list <- minicensus_data
