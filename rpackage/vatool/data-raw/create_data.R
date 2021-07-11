@@ -17,3 +17,16 @@ icd_data_tza <- tibble(icd_codes = icd_codes, icd_names = icd_names)
 
 usethis::use_data(icd_data_moz, overwrite = T)
 usethis::use_data(icd_data_tza, overwrite = T)
+
+
+# read in va survey and choices 
+va_survey <- readr::read_csv('va_survey.csv')
+va_choices <- readr::read_csv('va_choices.csv')
+
+# get names of select_one and select_multiples
+select_names <- va_survey$name[grepl('select', va_survey$type)]
+select_names <- select_names[!is.na(select_names)]
+
+usethis::use_data(va_survey, overwrite = T)
+usethis::use_data(va_choices, overwrite = T)
+usethis::use_data(select_names, overwrite = T)
