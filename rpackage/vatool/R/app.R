@@ -33,6 +33,9 @@ app_ui <- function(request) {
             text="Adjudicate",
             tabName="adjudicate"),
           menuItem(
+            text="Unresolved VAs",
+            tabName="adjudicate_two"),
+          menuItem(
             text="Summary",
             tabName="summary"),
           menuItem(
@@ -107,6 +110,12 @@ app_ui <- function(request) {
             )
           ),
           tabItem(
+            tabName = 'adjudicate_two',
+            fluidRow(
+              uiOutput('ui_adjudicate_two')
+            )
+          ),
+          tabItem(
             tabName = 'summary',
             fluidRow(
               div(class = "tableCard",
@@ -150,6 +159,7 @@ app_server <- function(input, output, session) {
   logged_in <- reactiveVal(value = FALSE)
   submission_success <- reactiveVal(value = NULL)
   adj_submission_success <- reactiveVal(value = NULL)
+  adj_two_submission_success <- reactiveVal(value = NULL)
   
   log_in_fail <- reactiveVal(value=FALSE)
   # Connect to database
@@ -241,6 +251,10 @@ app_server <- function(input, output, session) {
         group_by(country) %>%
         summarise(`Number of VAs coded` = length(which(!is.na(time_stamp)))) %>% 
         inner_join(pd)
+      # save(out, file = 'temp_out.rda')
+      out$`Weekly Target`<- ifelse(out$country == 'Mozambique', 59, 100)
+      # add in target
+      out <- out %>% select(Country = country,`Number of VAs coded`,`Weekly Target`,  `Total VAs`)
       
     }
     if(!is.null(out)){
@@ -250,6 +264,121 @@ app_server <- function(input, output, session) {
     }
   })
   
+  # UNRESOLVED VAS
+  # Selection input for VA ID
+  output$ui_adjudicate_two <- renderUI({
+    li <- logged_in()
+    uu <- !is.null(users)
+    li <- li & uu
+    if(li){
+      cn <- input$country
+      liu <- input$log_in_user
+      
+      death_id_choices <- va_choices$adjudicator_two_choices
+      
+      cods_choices <- cod_choices(country = cn)
+      # save(users, file = 'temp_users.rda')
+      
+      liu <- input$log_in_user
+      if(liu %in% c('ben', 'charfudin', 'carlos','hansel')){
+       
+          fluidPage(
+            fluidRow(
+              column(12,
+                     h2('Causes of deaths from other physicians')
+              ),
+              column(9,
+                     
+                     div(class = "tableCard",
+                         DT::dataTableOutput('adj_two_table_2')
+                     ),
+                     h2('VA form'),
+                     div(class = "tableCard",
+                         DT::dataTableOutput('adj_two_table_1')
+                     )
+              ),
+              column(3,
+                     # h2(' '),
+                     
+                     div(class = "tableCard",
+                         selectInput('adj_two_death_id', 'Select the VA ID', choices = death_id_choices),
+                         selectInput('adj_two_cods', 'Select underlying cause of death',  choices = c('', sort(unique(names(cods_choices))))),
+                         textAreaInput(inputId = 'adj_two_phy_notes', label = 'Enter additional notes on cause of death', value = NULL),
+                         actionButton('adj_two_submit_cod', 'Submit cause of death', width = '170px'),
+                         uiOutput('ui_two_submission_adj')
+                     )
+              )
+            )
+          )
+        
+      } else {
+        h4('This page can only be viewed by the final adjudicator')
+      }
+      
+    } else {
+      NULL
+    }
+  })
+  
+  # table showing 
+  output$adj_two_table_1 <- DT::renderDataTable({
+    li <- logged_in()
+    cn <- input$country
+    out <- data_frame(' ' = 'No VAs to adjudicate')
+    if(li){
+      idi <- input$adj_two_death_id
+      if(!is.null(idi) & idi != ''){
+        pd <- data$va 
+        if(cn == 'Mozambique'){
+          pd <- pd %>% filter(grepl('manhica', server))
+        } else {
+          pd <- pd %>% filter(grepl('ihi', server))
+        }
+        person <- pd %>% filter(death_id == idi)
+        save(person, file = 'temp_person.rda')
+        # remove other columns
+        remove_these <- "write your 3 digit|Id10007|server|first or given|the surname|name of VA|1	Manually write your 3 digit worker ID here|tz001|this_usernameTake a picture of the painted Household ID|isadult1|isadult2|isneonatal|isneonatal2|ischild1|ischild2|instancename|instance_id|device_id|end_time|start_time|todays_date|wid|Do you have a QR code with your worker ID?|wid|ageindays|ageindaysneonate|ageinmonths|ageinmonthsbyyear|ageinmonthsremain|ageinyears2|ageinyearsremain|The GPS coordinates represents|Collect the GPS coordinates of this location|Does the house you're at have a painted ID number on it?|hh_id|Write the 6 digit household ID here|Id10007|Id10008|Id10009|Id10010|Id10010a| Id10010b|Id10011|Id10013|Id10017|Id10018|Id10018d|Id10020|Id10022|Id10023|Id10052|Id10053|Id10057|Id10061|Id10062|Id10069"
+        
+        # remove columns with NA
+        person <- person[, !grepl(remove_these, names(person))]
+        person <- get_va_names(person, country = cn)
+        person <- person[, apply(person, 2, function(x) !any(is.na(x)))] 
+        # person <- person[, apply(person, 2, function(x) x != 'no')]
+        out <- as.data.frame(t(person))
+        out$Question <- rownames(out)
+        if(ncol(out)==2){
+          names(out) <- c('Answer', 'Question')
+          rownames(out) <- NULL
+          out <- out[, c('Question', 'Answer')]
+        } else {
+          out <- NULL
+        }
+      }
+    } 
+    out
+  })
+  
+  # table showing 
+  output$adj_two_table_2 <- DT::renderDataTable({
+    li <- logged_in()
+    out <- NULL
+    if(li){
+      idi <- input$adj_two_death_id
+      
+      if(!is.null(idi)){
+        out <- cods %>% filter(death_id == idi)
+      }
+    } 
+    names(out) <- c('User ID', 'Death ID', 'Immediate COD code', 'Immediate COD', 'Intermediary COD code', 'Intermediary COD', 'Underlying COD code', 'Underlying COD', 'Time stamp', 'Physician Notes')
+    DT::datatable(out, options = list(scrollX = TRUE))
+  })
+  
+  
+  
+  
+  
+  
+  
   # Selection input for VA ID
   output$ui_adjudicate <- renderUI({
     li <- logged_in()
@@ -258,55 +387,74 @@ app_server <- function(input, output, session) {
     if(li){
       cn <- input$country
       liu <- input$log_in_user
-      # message('at point 3')
-      # # user_role <- users %>% dplyr::filter(username == tolower(liu)) %>% .$role
-      # 
-      # 
-      # # get ids that have more than one diagnosis
-      # user <- users %>% dplyr::filter(username == tolower(liu))
-      # userid <- user %>% dplyr::filter(username == tolower(liu)) %>% .$user_id
-      # message('at point 3.5')
-      # 
-      # # make sure user cant adjudicate a VA he already adjudicatd 
-      # cods <- cods %>% filter(user_id != userid)
-      # cod <- cods %>% 
-      #   group_by(death_id, cod_3) %>% 
-      #   summarise(counts = n())
+     
       death_id_choices <- va_choices$adjudicator_choices
       
       cods_choices <- cod_choices(country = cn)
+      # save(users, file = 'temp_users.rda')
       
-      
-      
-      fluidPage(
-        fluidRow(
-          column(12,
-                 h2('Causes of deaths from other physicians')
-          ),
-          column(9,
-                 
-                 div(class = "tableCard",
-                     DT::dataTableOutput('adj_table_2')
-                 ),
-                 h2('VA form'),
-                 div(class = "tableCard",
-                     DT::dataTableOutput('adj_table_1')
-                 )
-          ),
-          column(3,
-                 # h2(' '),
-                 
-                 div(class = "tableCard",
-                     selectInput('adj_death_id', 'Select the VA ID', choices = death_id_choices),
-                     selectInput('adj_cods', 'Select underlying cause of death',  choices = c('', sort(unique(names(cods_choices))))),
-                     textAreaInput(inputId = 'adj_phy_notes', label = 'Enter additional notes on cause of death', value = NULL),
-                     actionButton('adj_submit_cod', 'Submit cause of death and notes'),
-                     uiOutput('ui_submission_adj')
-                 )
+      liu <- input$log_in_user
+      if(liu %in% c('ben', 'charfudin', 'carlos', 'robert', 'joyce', 'celso', 'elisio', 'hansel')){
+        if(cn == 'Mozambique'){
+          fluidPage(
+            fluidRow(
+              column(12,
+                     h2('Causes of deaths from other physicians')
+              ),
+              column(9,
+                     
+                     h2('VA form'),
+                     div(class = "tableCard",
+                         DT::dataTableOutput('adj_table_1')
+                     )
+              ),
+              column(3,
+                     # h2(' '),
+                     
+                     div(class = "tableCard",
+                         selectInput('adj_death_id', 'Select the VA ID', choices = death_id_choices),
+                         selectInput('adj_cods', 'Select underlying cause of death',  choices = c('', sort(unique(names(cods_choices))))),
+                         textAreaInput(inputId = 'adj_phy_notes', label = 'Enter additional notes on cause of death', value = NULL),
+                         actionButton('adj_submit_cod', 'Submit cause of death', width = '170px'),
+                         uiOutput('ui_submission_adj')
+                     )
+              )
+            )
           )
-        )
-      )
-      
+        } else {
+          fluidPage(
+            fluidRow(
+              column(12,
+                     h2('Causes of deaths from other physicians')
+              ),
+              column(9,
+                     
+                     div(class = "tableCard",
+                         DT::dataTableOutput('adj_table_2')
+                     ),
+                     h2('VA form'),
+                     div(class = "tableCard",
+                         DT::dataTableOutput('adj_table_1')
+                     )
+              ),
+              column(3,
+                     # h2(' '),
+                     
+                     div(class = "tableCard",
+                         selectInput('adj_death_id', 'Select the VA ID', choices = death_id_choices),
+                         selectInput('adj_cods', 'Select underlying cause of death',  choices = c('', sort(unique(names(cods_choices))))),
+                         textAreaInput(inputId = 'adj_phy_notes', label = 'Enter additional notes on cause of death', value = NULL),
+                         actionButton('adj_submit_cod', 'Submit cause of death', '170px'),
+                         uiOutput('ui_submission_adj')
+                     )
+              )
+            )
+          )
+        }
+      } else {
+        h4('This page can only be viewed by Adjudicators')
+      }
+
     } else {
       NULL
     }
@@ -327,6 +475,7 @@ app_server <- function(input, output, session) {
           pd <- pd %>% filter(grepl('ihi', server))
         }
         person <- pd %>% filter(death_id == idi)
+        save(person, file = 'temp_person.rda')
         # remove other columns
         remove_these <- "write your 3 digit|Id10007|server|first or given|the surname|name of VA|1	Manually write your 3 digit worker ID here|tz001|this_usernameTake a picture of the painted Household ID|isadult1|isadult2|isneonatal|isneonatal2|ischild1|ischild2|instancename|instance_id|device_id|end_time|start_time|todays_date|wid|Do you have a QR code with your worker ID?|wid|ageindays|ageindaysneonate|ageinmonths|ageinmonthsbyyear|ageinmonthsremain|ageinyears2|ageinyearsremain|The GPS coordinates represents|Collect the GPS coordinates of this location|Does the house you're at have a painted ID number on it?|hh_id|Write the 6 digit household ID here|Id10007|Id10008|Id10009|Id10010|Id10010a| Id10010b|Id10011|Id10013|Id10017|Id10018|Id10018d|Id10020|Id10022|Id10023|Id10052|Id10053|Id10057|Id10061|Id10062|Id10069"
         
@@ -335,7 +484,6 @@ app_server <- function(input, output, session) {
         person <- get_va_names(person, country = cn)
         person <- person[, apply(person, 2, function(x) !any(is.na(x)))] 
         # person <- person[, apply(person, 2, function(x) x != 'no')]
-        
         out <- as.data.frame(t(person))
         out$Question <- rownames(out)
         if(ncol(out)==2){
@@ -362,7 +510,8 @@ app_server <- function(input, output, session) {
       }
     } 
     names(out) <- c('User ID', 'Death ID', 'Immediate COD code', 'Immediate COD', 'Intermediary COD code', 'Intermediary COD', 'Underlying COD code', 'Underlying COD', 'Time stamp', 'Physician Notes')
-    out
+    DT::datatable(out, options = list(scrollX = TRUE))
+    
   })
   
   # Define the button
@@ -396,7 +545,8 @@ app_server <- function(input, output, session) {
   
   # Create a reactive object to store the choices of death ids
   va_choices <- reactiveValues(choices = c(),
-                               adjudicator_choices = c())
+                               adjudicator_choices = c(),
+                               adjudicator_two_choices = c())
   
   # Observe the log in, and upon log in, populate the roster of choices
   observeEvent(c(input$log_in,input$country), {
@@ -416,8 +566,7 @@ app_server <- function(input, output, session) {
     }
     if(ok){
       pd <- data$va
-      save(pd, file = 'tpd.rda')
-      
+
       if(cn == 'Mozambique'){
         pd <- pd %>% filter(grepl('manhica', server))
       } else {
@@ -445,14 +594,29 @@ app_server <- function(input, output, session) {
       userid <- user %>% dplyr::filter(username == tolower(liu)) %>% .$user_id
       
       # make sure user cant adjudicate a VA he already adjudicatd 
-      cods <- cods %>% filter(user_id != userid)
-      cod <- cods %>% 
+      # cods <- cods %>% filter(user_id != userid)
+      death_id_choices <- cods %>% 
         group_by(death_id, cod_3) %>% 
-        summarise(counts = n())
-      death_id_choices <- unique(cod$death_id[duplicated(cod$death_id)])
-      death_id_choices <- sort(unique(death_id_choices))
+        summarise(counts = n()) %>%
+        group_by(death_id) %>% 
+        summarise(adj_counts = n()) %>% 
+        filter(adj_counts == 2) %>% 
+        .$death_id
+      
       va_choices$adjudicator_choices <- death_id_choices
       
+      # get unresolved VAs
+      # cods <- cods %>% filter(user_id != userid)
+      save(cods, file = 'temp_cods.rda')
+      death_id_choices <- cods %>% 
+        group_by(death_id, cod_3) %>% 
+        summarise(counts = n()) %>%
+        group_by(death_id) %>% 
+        summarise(adj_counts = n()) %>% 
+        filter(adj_counts == 3) %>% 
+        .$death_id
+      
+      va_choices$adjudicator_two_choices <- death_id_choices
     }
   })
   
@@ -536,8 +700,6 @@ app_server <- function(input, output, session) {
         pd <- pd %>% filter(grepl('ihi', server))
       }
       person <- pd %>% filter(death_id == idi)
-      # save(person, file = 'temp_person.rda')
-      
       
       # remove other columns 
       remove_these <- "write your 3 digit|Id10007|server|first or given|the surname|name of VA|1	Manually write your 3 digit worker ID here|tz001|this_usernameTake a picture of the painted Household ID|isadult1|isadult2|isneonatal|isneonatal2|ischild1|ischild2|instancename|instance_id|device_id|end_time|start_time|todays_date|wid|Do you have a QR code with your worker ID?|wid|ageindays|ageindaysneonate|ageinmonths|ageinmonthsbyyear|ageinmonthsremain|ageinyears2|ageinyearsremain|The GPS coordinates represents|Collect the GPS coordinates of this location|Does the house you're at have a painted ID number on it?|hh_id|Write the 6 digit household ID here|Id10007|Id10008|Id10009|Id10010|Id10010a| Id10010b|Id10011|Id10013|Id10017|Id10018|Id10018d|Id10020|Id10022|Id10023|Id10052|Id10053|Id10057|Id10061|Id10062|Id10069"
@@ -546,7 +708,6 @@ app_server <- function(input, output, session) {
       person <- person[, !grepl(remove_these, names(person))]
       # person <- person[,apply(person, 2, function(x) x != 'no')]
       
-      save(person, file = 'temp_person.rda')
       person <- get_va_names(person, country = cn)
       # remove columns with NA
       person <- person[ , apply(person, 2, function(x) !any(is.na(x)))]
@@ -666,7 +827,7 @@ app_server <- function(input, output, session) {
         message('at point 4')
         liu <- input$log_in_user
         out <- users %>% dplyr::filter(username == tolower(liu))
-        names(out) <- c('User ID', 'Username', 'Password', 'First name', 'Last name')
+        names(out) <- c('User ID', 'Username', 'Password', 'First name', 'Last name', 'Country', 'Role')
         out
       }
     } 
@@ -700,18 +861,20 @@ app_server <- function(input, output, session) {
     cod_names <- cod_data(country = cn)
     cod_data <- data$cod
     pn <- input$adj_phy_notes
-    cod_1 = input$adj_cods
+    cod_3 = input$adj_cods
     # condition if underlying cause of death is not fiilled out, wont submit
-    if(cod_1==''){
+    if(cod_3==''){
       adj_submission_success(FALSE)
     } else {
       death_id = input$adj_death_id
-      cod_data$cod_1 = input$adj_cods
+      # save(cod_data,death_id, pn, cod_1, file = 'adj_temp.rda' )
+      
+      cod_data$cod_3 = input$adj_cods
       cod_data$death_id = death_id
       cod_data$time_stamp <- Sys.time()
       cod_data$doctor_note <- pn
       
-      cod_data$cod_code_1 <- cod_names$cod_code[cod_names$cod_names==cod_data$cod_1][1]
+      cod_data$cod_code_3 <- cod_names$cod_code[cod_names$cod_names==cod_data$cod_3][1]
       dbAppendTable(conn = con, name = 'vatool_cods', value = cod_data)
       adj_submission_success(TRUE)
       
@@ -719,7 +882,6 @@ app_server <- function(input, output, session) {
       old_choices <- va_choices$adjudicator_choices
       new_choices <- old_choices[!old_choices %in% death_id]
       va_choices$adjudicator_choices <- new_choices
-      
     }
     
   })
@@ -731,6 +893,52 @@ app_server <- function(input, output, session) {
   
   output$ui_submission_adj <- renderUI({
     ss <- adj_submission_success()
+    if(is.null(ss)){
+      NULL
+    } else if(ss){
+      h3('Submission successful')
+    } else {
+      h3('Submission unsuccessful')
+    }
+  })
+  
+  
+  # Unresolved VAs
+  observeEvent(input$adj_two_submit_cod, {
+    cn <- input$country
+    cod_names <- cod_data(country = cn)
+    cod_data <- data$cod
+    pn <- input$adj_two_phy_notes
+    cod_3 = input$adj_two_cods
+    # condition if underlying cause of death is not fiilled out, wont submit
+    if(cod_3==''){
+      adj_two_submission_success(FALSE)
+    } else {
+      death_id = input$adj_two_death_id
+      cod_data$cod_3 = input$adj_two_cods
+      cod_data$death_id = death_id
+      cod_data$time_stamp <- Sys.time()
+      cod_data$doctor_note <- pn
+      
+      cod_data$cod_code_3 <- cod_names$cod_code[cod_names$cod_names==cod_data$cod_3][1]
+      dbAppendTable(conn = con, name = 'vatool_cods', value = cod_data)
+      adj_two_submission_success(TRUE)
+      
+      # also remove the now adjudicated ID from the choices
+      old_choices <- va_choices$adjudicator_two_choices
+      new_choices <- old_choices[!old_choices %in% death_id]
+      va_choices$adjudicator_two_choices <- new_choices
+    }
+    
+  })
+  
+  # Observe changes in inputs
+  observeEvent(c(input$adj_two_cod,input$adj_two_death_id), {
+    adj_two_submission_success(NULL)
+  })
+  
+  output$ui_two_submission_adj <- renderUI({
+    ss <- adj_two_submission_success()
     if(is.null(ss)){
       NULL
     } else if(ss){
