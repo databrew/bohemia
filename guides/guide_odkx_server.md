@@ -34,7 +34,9 @@ ODK-X Cloud Endpoints are servers that communicate with the ODK-X Android applic
 
 To run the project, we use the [ODK-X Sync Endpoint](https://docs.odk-x.org/sync-endpoint/) set up on AWS.
 
-### Set Up ODK-X Sync Endpoint on AWS
+For the bohemia project, we set up several endpoints. Each endpoint has its own database. Mobile devices should be manually connected to the relevant endpoint. This section explains how to set up the first endpoint. The process for all the other endpoints is described in the [Set Up more instances of the service and subdomains](#set-up-more-instances-of-the-service-and-subdomains) section. The points below that are different for that section are marked as (x1), (x2), ...
+
+### Set Up the first of ODK-X Sync Endpoints on AWS
 
 Official documentation reference: https://docs.odk-x.org/sync-endpoint-cloud-setup/#setting-up-an-aws-account
 
@@ -43,11 +45,11 @@ Official documentation reference: https://docs.odk-x.org/sync-endpoint-cloud-set
 
 1. Click on EC2 link under the COMPUTE section. Then, go ahead and launch a new instance.
 
-2. Choose an Amazon Machine Image (AMI). Scroll through the options and select Ubuntu Server 18.04 LTS (HVM), SSD Volume Type.
+2. Choose an Amazon Machine Image (AMI). Scroll through the options and select Ubuntu Server 20.04 LTS (HVM), SSD Volume Type.
 
-3. Skip the `Choose an Instance Type` step. Instead, click on the `3: Configure Instance` tab at the top and then click on the `As File` option and then attach the `cloud_init_AWS.yml` file provided in the `misc/odkx/init_files` folder.
+3. Skip the `Choose an Instance Type` step. Instead, click on the `3: Configure Instance` tab at the top and then click on the `As File` option in the `Advanced Details` section and then attach the `cloud_init_AWS.yml` file provided in the `misc/odkx/init_files` folder.
 
-4. Click on the `6. Configure Security Group` tab in order to modify the firewall rules and control the traffic for the instance.
+4. (x1) Click on the `6. Configure Security Group` tab in order to modify the firewall rules and control the traffic for the instance.
 Create a new security group, name it `custom_security_group` and modify the rules to match the rules specified below, then click Review and Launch.
 
 
@@ -63,8 +65,7 @@ Create a new security group, name it `custom_security_group` and modify the rule
 
 6. Create a new key pair to access the instance via SSH and make sure to download it to a secure location. Finally, click Launch Instances!
 
-
-#### Configuring a key pair  
+#### (x2) Configuring a key pair
 
 - A modal will show up saying “Select an existing key pair or create a new key pair”
 - Select “Create a new key pair”
@@ -74,15 +75,15 @@ Create a new security group, name it `custom_security_group` and modify the rule
 - Wait a few minutes for the system to launch (check the "launch log" if you’re impatient)
 - This will bring you to the instances menu, where you can see things (in the “Description” tab below) like public IP address, etc.
 
-### Allocate a persistent IP
+### (x3) Allocate a persistent IP
 
 - So that your AWS instance's public IP address does not change at reboot, etc., you need to create an "Elastic IP address". To do this:
   - Go to the EC2 dashboard in aws
   - Click "Elastic IPs" under "Network & Security" in the left-most menu
-  - Click "Allocate new address"
-  - Select "Amazon pool"
+  - Click "Allocate Elastic IP address"
+  - Select "Amazon's pool of IPv4 addresses"
   - Click "Allocate"
-  - In the allocation menu, click "Associate address"
+  - Click "Associate this Elastic IP address"
   - Select the instance you just created. Also select the corresponding "Private IP"
   - Click "Associate"
 - Note, this guide is written with the below elastic id. You'll need to replace this with your own when necessary.
@@ -111,6 +112,8 @@ ssh -i "/home/joebrew/.ssh/pariskey.pem" ubuntu@ec2-13-36-9-244.eu-west-3.comput
 ```
 
 - Congratulations! You are now able to run linux commands on your new ubuntu server
+
+#### (x4) Setting up an alias
 - If you want, create an alias such as:
 ```
 alias odkx='ssh -i "/home/joebrew/.ssh/pariskey.pem" ubuntu@ec2-13-36-9-244.eu-west-3.compute.amazonaws.com'
@@ -119,7 +122,7 @@ alias odkx='ssh -i "/home/joebrew/.ssh/pariskey.pem" ubuntu@ec2-13-36-9-244.eu-w
 - Run `source ~/.bashrc`
 - You can now ssh into the instance by simply running `odkx`
 
-### Setting up the domain
+### (x5) Setting up the domain
 
 - In domains.google.com, click on the purchased domain.
 - Click on "DNS" on the left
@@ -291,3 +294,21 @@ _After creating the users required, there is no longer need access to the LDAP a
 ### Outstanding Tasks
 
 - [ ] Production set up for the LDAP as advised in the [Advanced LDAP](https://github.com/odk-x/sync-endpoint-default-setup#warnings)
+
+## Set Up more instances of the service and subdomains
+
+Follow the instructions in the section [ODK-X Cloud Endpoints](#odk-x-cloud-endpoints) with the following exceptions (wherever I use big letter N, you should use the consecutive number of the instance, e.g. 1):
+
+- (x1) In the `6. Configure Security Group` tab, the name of the security group should be `custom_security_group_N` (where N is the consecutive number of the instance).
+- (x2) Instead of the section about configuring a key pair, choose the option "Select an existing key pair" and select it instead of generating a new one.
+- (x3) Do not set up an Elastic IP. Although it will cost less than $5 per month per instance, it's not needed because we can use CNAME record for the subdomain (which will slightly slow down establishing the connection to the server, but it shouldn't be noticeable)
+- (x4) Instead of "odkx" use "odkxN" (where N is the consecutive number of the instance)
+- (x5) Instead of setting up the domain, we will set up subdomains:
+  1. On AWS click the EC2 instance that you want to add subdomain for and click "Connect", under "SSH Client", you'll have the point "Connect to your instance using its Public DNS" (it will look like: "ec2-18-119-5-153.us-east-2.compute.amazonaws.com"), I'll refer to it as INSTANCE_URL from now on
+  2. Choose your domain on the domains.google.com
+  3. Click "DNS" in the left menu
+  4. Scroll to "Custom resource records"
+  5. In the first field add the name of the domain (e.g. "a")
+  6. In the second field select "CNAME"
+  7. In the last field ("Domain name") put the INSTANCE_URL from the first point.
+  8. Click "Add". The subdomain (e.g. a.domain.com) should be available within an hour.
