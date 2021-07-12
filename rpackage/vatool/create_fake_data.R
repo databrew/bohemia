@@ -1,4 +1,4 @@
-is_local <- TRUE
+is_local <- FALSE
 library(dplyr)
 library(RPostgres)
 library(yaml)
