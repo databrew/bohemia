@@ -1,3 +1,4 @@
+country <- 'Tanzania'
 suitcase_dir <- '/home/joebrew/Documents/suitcase'
 jar_file <- 'ODK-X_Suitcase_v2.1.8.jar'
 odkx_path <- '/home/joebrew/Documents/bohemia/odkx/app/config' # must be full path!
@@ -7,7 +8,8 @@ use_real_names <- FALSE # whether to decrypt names (TRUE) or use fakes ones (fal
 is_linux <- Sys.info()['sysname'] == 'Linux'
 library(dplyr)
 ll <- bohemia::locations
-ll_sub <- ll %>% filter(Ward == 'Mopeia sede | Nzanza')
+ll <- ll %>% filter(Country == 'Tanzania')
+ll_sub <- ll %>% filter(Ward %in% c('Kibiti', 'Dimani', 'Mchukwi', 'Mtawanya'))
 only_hamlets <- ll_sub$code # c('BAA', 'DOW', 'KIS', 'LIK') # set to NULL if you want all hamlets
 
 print(creds$odkx_server)
@@ -441,8 +443,7 @@ message('Loading minicensus data')
 # load('minicensus_data.RData')
 
 library(bohemia)
-# Define the country
-country <- 'Mozambique'
+
 
 # Read in minicensus data
 file_name <- paste0(country, '_mincensus_data.RData')
