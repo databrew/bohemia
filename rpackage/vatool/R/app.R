@@ -170,7 +170,7 @@ app_server <- function(input, output, session) {
   cods <- dbReadTable(conn=con, 'vatool_cods')
   data <- reactiveValues(va = data.frame(), session = data.frame(), cod = data.frame())
   # save(users, cods, file = 'va_data.rda')
-  print(users)
+  # print(users)
   
   # Upon log in, read in data
   observeEvent(input$log_in,{
@@ -335,7 +335,6 @@ app_server <- function(input, output, session) {
           pd <- pd %>% filter(grepl('ihi', server))
         }
         person <- pd %>% filter(death_id == idi)
-        save(person, file = 'temp_person.rda')
         # remove other columns
         remove_these <- "write your 3 digit|Id10007|server|first or given|the surname|name of VA|1	Manually write your 3 digit worker ID here|tz001|this_usernameTake a picture of the painted Household ID|isadult1|isadult2|isneonatal|isneonatal2|ischild1|ischild2|instancename|instance_id|device_id|end_time|start_time|todays_date|wid|Do you have a QR code with your worker ID?|wid|ageindays|ageindaysneonate|ageinmonths|ageinmonthsbyyear|ageinmonthsremain|ageinyears2|ageinyearsremain|The GPS coordinates represents|Collect the GPS coordinates of this location|Does the house you're at have a painted ID number on it?|hh_id|Write the 6 digit household ID here|Id10007|Id10008|Id10009|Id10010|Id10010a| Id10010b|Id10011|Id10013|Id10017|Id10018|Id10018d|Id10020|Id10022|Id10023|Id10052|Id10053|Id10057|Id10061|Id10062|Id10069"
         
@@ -346,6 +345,7 @@ app_server <- function(input, output, session) {
         # person <- person[, apply(person, 2, function(x) x != 'no')]
         out <- as.data.frame(t(person))
         out$Question <- rownames(out)
+
         if(ncol(out)==2){
           names(out) <- c('Answer', 'Question')
           rownames(out) <- NULL
@@ -355,6 +355,7 @@ app_server <- function(input, output, session) {
         }
       }
     } 
+
     out
   })
   
@@ -368,9 +369,13 @@ app_server <- function(input, output, session) {
       if(!is.null(idi)){
         out <- cods %>% filter(death_id == idi)
       }
-    } 
-    names(out) <- c('User ID', 'Death ID', 'Immediate COD code', 'Immediate COD', 'Intermediary COD code', 'Intermediary COD', 'Underlying COD code', 'Underlying COD', 'Time stamp', 'Physician Notes')
-    DT::datatable(out, options = list(scrollX = TRUE))
+    }
+    if(!is.null(out)){
+      names(out) <- c('User ID', 'Death ID', 'Immediate COD code', 'Immediate COD', 'Intermediary COD code', 'Intermediary COD', 'Underlying COD code', 'Underlying COD', 'Time stamp', 'Physician Notes')
+      DT::datatable(out, options = list(scrollX = TRUE))
+      
+    }
+    
   })
   
   
@@ -577,7 +582,7 @@ app_server <- function(input, output, session) {
       user <- users %>% dplyr::filter(username == tolower(liu))
       userid <- user %>% dplyr::filter(username == tolower(liu)) %>% .$user_id
       # save(pd, liu, user, userid,cods,  file = 'temp_choice.rda')
-      out <- cods %>% dplyr::filter(user_id == userid)
+      out <-table_cods$data %>% dplyr::filter(user_id == userid)
       choices <- pd$death_id
       # Removing already used VA ID from the list of the user
       choices <- setdiff(choices, out$death_id)
@@ -607,8 +612,8 @@ app_server <- function(input, output, session) {
       
       # get unresolved VAs
       # cods <- cods %>% filter(user_id != userid)
-      save(cods, file = 'temp_cods.rda')
-      death_id_choices <- cods %>% 
+      temp <- cods
+      death_id_choices <- temp %>% 
         group_by(death_id, cod_3) %>% 
         summarise(counts = n()) %>%
         group_by(death_id) %>% 
@@ -954,8 +959,7 @@ app_server <- function(input, output, session) {
       cat(paste0('Disconnected from database.'))
     }
   })
-  
-  
+
 }
 
 #' Add external Resources to the Application

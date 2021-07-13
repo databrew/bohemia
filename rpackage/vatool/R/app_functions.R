@@ -67,8 +67,7 @@ get_va_names <- function(va_data, country = 'Tanzania'){
           va_data[i] <- temp
         }
         names(va_data)[i] <- as.character(va_names$label_portuguese[name_index])
-        print(i)
-        
+
       }
     }
   }
