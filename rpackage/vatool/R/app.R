@@ -193,7 +193,7 @@ app_server <- function(input, output, session) {
       # load data
       data$va <- load_va_data(is_local = is_local)
       # data$va <- readRDS('~/Desktop/va_data.rda')
-      
+
       # print(head(data$va))
       # create table with same columns as session table in database (to append upon logout)
       print(users)
@@ -600,7 +600,7 @@ app_server <- function(input, output, session) {
       
       # make sure user cant adjudicate a VA he already adjudicatd 
       # cods <- cods %>% filter(user_id != userid)
-      death_id_choices <- cods %>% 
+      death_id_choices <- table_cods$data %>% 
         group_by(death_id, cod_3) %>% 
         summarise(counts = n()) %>%
         group_by(death_id) %>% 
@@ -612,8 +612,7 @@ app_server <- function(input, output, session) {
       
       # get unresolved VAs
       # cods <- cods %>% filter(user_id != userid)
-      temp <- cods
-      death_id_choices <- temp %>% 
+      death_id_choices <- table_cods$data %>% 
         group_by(death_id, cod_3) %>% 
         summarise(counts = n()) %>%
         group_by(death_id) %>% 
